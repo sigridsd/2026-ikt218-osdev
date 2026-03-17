@@ -91,7 +91,6 @@ void terminal_setcolor(uint8_t color)
 void terminal_putchar(char c)
 {
     if (c == '\n') {
-        /* Move to the start of the next line */
         terminal_col = 0;
         if (++terminal_row >= VGA_HEIGHT) {
             terminal_scroll();
@@ -99,11 +98,18 @@ void terminal_putchar(char c)
         return;
     }
 
-    /* Write the character into the framebuffer at the current cursor position */
+    if (c == '\b') {
+        if (terminal_col > 0) {
+            terminal_col--;
+            terminal_buffer[terminal_row * VGA_WIDTH + terminal_col] =
+                vga_entry(' ', terminal_color);
+        }
+        return;
+    }
+
     terminal_buffer[terminal_row * VGA_WIDTH + terminal_col] =
         vga_entry((unsigned char)c, terminal_color);
 
-    /* Advance the cursor; wrap to the next line if we hit the right edge */
     if (++terminal_col >= VGA_WIDTH) {
         terminal_col = 0;
         if (++terminal_row >= VGA_HEIGHT) {

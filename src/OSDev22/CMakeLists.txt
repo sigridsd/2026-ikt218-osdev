@@ -58,13 +58,20 @@ set(OS_KERNEL_LINKER "${CMAKE_CURRENT_SOURCE_DIR}/src/arch/${OS_ARCH_TARGET}/lin
 
 # Add executable target for the kernel
 add_executable(uiaos-kernel
-    src/multiboot2.asm          # Multiboot2 header + _start entry point
-    src/kernel.c                # Kernel main
-    src/gdt.c                   # GDT initialisation (C)
-    src/arch/i386/gdt.asm       # lgdt + segment-register reload (ASM)
-    src/terminal.c              # VGA text-mode terminal + printf
+    src/multiboot2.asm
+    src/kernel.c
+    src/gdt.c
+    src/arch/i386/gdt.asm
+    src/terminal.c
+    src/idt.c
+    src/isr.c
+    src/irq.c
+    src/keyboard.c
+    src/string.c
+    src/arch/i386/idt.asm
+    src/arch/i386/isr.asm
+    src/arch/i386/irq.asm
 )
-
 # Include directories for the kernel target
 target_include_directories(uiaos-kernel PUBLIC include)
 

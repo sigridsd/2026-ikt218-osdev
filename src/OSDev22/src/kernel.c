@@ -4,41 +4,47 @@
 #include "libc/stdint.h"
 #include "gdt.h"
 #include "terminal.h"
+#include "idt.h"
+#include "isr.h"
+#include "irq.h"
+#include "keyboard.h"
 
-/*
- * Minimal multiboot2 info header passed to us by the bootloader.
- * The full structure is defined in multiboot2.h; we only need the
- * size and the pointer to the first tag here.
- */
 struct multiboot_info {
     uint32_t size;
     uint32_t reserved;
     struct multiboot_tag *first;
 };
 
-/*
- * main - kernel entry point
- *
- * Called from multiboot2.asm after the stack is set up.
- * Arguments are pushed by the assembly stub:
- *   magic       - must equal MULTIBOOT2_BOOTLOADER_MAGIC (0x36d76289)
- *   mb_info_addr - pointer to the multiboot2 information structure
- */
 int main(uint32_t magic, struct multiboot_info* mb_info_addr) {
     (void)magic;
     (void)mb_info_addr;
 
-    /* Set up the Global Descriptor Table (flat 4 GB code + data segments) */
+    /* Sett opp GDT - må gjøres først for riktig segmentering */
     gdt_init();
 
-    /* Initialise the VGA text-mode terminal and clear the screen */
+    /* Klargjør skjermen */
     terminal_initialize();
 
-    /* --- Hello World --- */
-    terminal_writestring("Hello World\n");
+    /* Sett opp interrupt-systemet */
+    idt_init();     /* Opprett tom IDT-tabell */
+    isr_init();     /* Registrer CPU-exceptions (0-31) */
+    irq_init();     /* Remap PIC + registrer hardware IRQ-er (32-47) + sti */
 
-    /* Show that printf works too */
-    //printf("Multiboot2 magic: 0x%x\n", magic);
+    /* Start tastatur-driver */
+    keyboard_init();
+
+    printf("Hello World\n");
+    printf("Interrupt-system aktivert!\n");
+    printf("Write something on keybords:\n");
+
+    /*
+     * Hovedloop - holder kernelen i live.
+     * hlt setter CPU-en i lavstrøm-modus til neste interrupt.
+     * Uten denne loopen ville main() returnert og kræsjet.
+     */
+    for (;;) {
+        asm volatile("hlt");
+    }
 
     return 0;
 }
