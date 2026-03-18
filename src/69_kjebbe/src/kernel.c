@@ -1,7 +1,7 @@
+#include "../include/libc/stdbool.h"
+#include "../include/libc/stdint.h"
 #include "../include/multiboot2.h"
-#include "libc/stdbool.h"
 #include "libc/stddef.h"
-#include "libc/stdint.h"
 
 typedef struct gdt_entry {
   uint16_t limit_low;  // Limit bits 0-15
