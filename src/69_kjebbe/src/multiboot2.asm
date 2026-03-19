@@ -1,6 +1,7 @@
 extern main
 global _start
-global gdt_flush; global makes it visible to C code
+global gdt_flush  ; makes gdt_flush visible to C code
+global idt_flush  ; makes idt_flush visible to C code
 
 section .multiboot_header
 header_start:
@@ -57,6 +58,14 @@ gdt_flush:
 .flush:
 	ret
 
+
+; idt_flush(uint32_t idt_ptr_address)
+; Called from C with the address of our idt_ptr_t struct.
+; The lidt instruction reads limit+base from that address and loads the IDT.
+idt_flush:
+    mov eax, [esp+4]   ; first argument: address of our idt_ptr_t
+    lidt [eax]         ; load the IDT (same idea as lgdt for the GDT)
+    ret
 
 section .bss
 stack_bottom:
