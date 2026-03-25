@@ -91,7 +91,7 @@ void irq_handler(isr_frame_t* frame) {
     uint8_t irq = (uint8_t)(frame->int_no - 0x20); // Calculate IRQ number from interrupt number
 
     if (irq == 1) { // Keyboard IRQ
-        keyboard_handler();
+        keyboard_on_irq1(); // read scancode, buffer, print ASCII
     }
 
     pic_send_eoi(irq); // Send End of Interrupt signal to PIC
