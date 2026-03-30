@@ -1,18 +1,15 @@
 #include "../include/libc/stddef.h" for size_t
 #include "../include/libc/stdint.h" for size_t
 
-// malloc/free are defined in malloc.c (C linkage).
+// Malloc and free from the given C implementation
 extern "C" void *malloc(size_t size);
 extern "C" void free(void *ptr);
 
-// Overload global operator new so C++ allocations use our kernel malloc.
+//  C++ new and delete operator use our malloc and free
 void *operator new(size_t size) { return malloc(size); }
 void *operator new[](size_t size) { return malloc(size); }
 void operator delete(void *ptr) noexcept { free(ptr); }
 void operator delete[](void *ptr) noexcept { free(ptr); }
-// Sized-delete overloads (suppress -Wsized-deallocation warning)
-void operator delete(void *ptr, size_t) noexcept { free(ptr); }
-void operator delete[](void *ptr, size_t) noexcept { free(ptr); }
 
 extern "C" int kernel_main(void);
 int kernel_main() { return 0; }
