@@ -9,6 +9,7 @@
 #include "../include/libc/stddef.h"
 #include "../include/libc/stdint.h"
 #include "../include/libc/stdio.h"
+#include "../include/matrix.h"
 #include "../include/menu.h"
 #include "../include/multiboot2.h"
 #include "../include/piano.h"
@@ -43,7 +44,6 @@ int main(uint32_t magic, struct multiboot_info *mb_info_addr) {
   // _start). Only safe to do after GDT, IDT, ISRs, IRQs and PIT are all set up.
   asm volatile("sti");
 
-  print_menu();
   while (true) {
     int entry = kb_dequeue(&kb);
     if (entry != -1) {

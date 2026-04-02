@@ -1,4 +1,5 @@
 #include "../../include/keyboard.h"
+#include "../../include/fedrelandet.h"
 #include "../../include/io.h"
 #include "../../include/irq.h"
 #include "../../include/libc/stdint.h"
@@ -74,6 +75,9 @@ void keyboard_handler(int scancode) {
     break;
   case PROGRAM_MENU:
     menu_keyboard_handler(scancode);
+    break;
+  case PROGRAM_FEDRELANDET:
+    fedrelandet_keyboard_handler(scancode);
     break;
   default:
     printf("unknown program: %d\n", active_program);

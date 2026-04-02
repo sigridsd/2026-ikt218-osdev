@@ -1,3 +1,4 @@
+#include "../../include/fedrelandet.h"
 #include "../../include/keyboard.h"
 #include "../../include/libc/stdio.h"
 #include "../../include/program.h"
@@ -34,6 +35,12 @@ void menu_navigate(int key) {
   case PROGRAM_SHELL:
     active_program = PROGRAM_SHELL;
     printf("ACTIVE PROGRAM: SHELL\n");
+    break;
+  case PROGRAM_FEDRELANDET:
+    active_program = PROGRAM_FEDRELANDET;
+    printf("ACTIVE PROGRAM: FEDRELANDET\n");
+    hedre_fedrelandet();
+
     break;
   case PROGRAM_PIANO:
     active_program = PROGRAM_PIANO;

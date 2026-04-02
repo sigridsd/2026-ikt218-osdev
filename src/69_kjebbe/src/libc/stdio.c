@@ -15,7 +15,7 @@ static int terminal_col = 0; // used to index the terminal buffer
 static uint8_t terminal_color = 0x07; // light grey on black.
 
 // terminal_scroll moves every line up by one and cleans the last row.
-static void terminal_scroll(void) {
+static void terminal_scroll(uint8_t terminal_color) {
   for (int row = 1; row < VGA_HEIGHT; row++) {
     for (int col = 0; col < VGA_WIDTH; col++) {
       terminal_buffer[(row - 1) * VGA_WIDTH + col] =
@@ -31,7 +31,7 @@ static void terminal_scroll(void) {
 
 // writes a single character to the VGA buffer.
 // uses terminal_col and terminal_row for indexing and state.
-void terminal_putchar(char c) {
+void terminal_putchar(char c, uint8_t terminal_color) {
   if (c == '\n') {
     terminal_col = 0;
     terminal_row++;
@@ -47,14 +47,14 @@ void terminal_putchar(char c) {
   }
 
   if (terminal_row >= VGA_HEIGHT) {
-    terminal_scroll();
+    terminal_scroll(terminal_color);
   }
 }
 
 // Uses terminal_putchar to write strings.
 static void terminal_write(const char *str) {
   for (int i = 0; str[i] != '\0'; i++) {
-    terminal_putchar(str[i]);
+    terminal_putchar(str[i], terminal_color);
   }
 }
 
@@ -62,7 +62,7 @@ static void terminal_write(const char *str) {
 // the screen
 static void print_int(int value) {
   if (value < 0) {
-    terminal_putchar('-');
+    terminal_putchar('-', terminal_color);
     value = -value;
   }
 
@@ -70,7 +70,7 @@ static void print_int(int value) {
   int i = 0;
 
   if (value == 0) {
-    terminal_putchar('0');
+    terminal_putchar('0', terminal_color);
     return;
   }
 
@@ -84,7 +84,7 @@ static void print_int(int value) {
   }
 
   while (i > 0) {
-    terminal_putchar(buf[--i]);
+    terminal_putchar(buf[--i], terminal_color);
   }
 }
 
@@ -98,7 +98,7 @@ static void print_hex(uint32_t value) {
   int i = 0;
 
   if (value == 0) {
-    terminal_putchar('0');
+    terminal_putchar('0', terminal_color);
     return;
   }
 
@@ -111,18 +111,12 @@ static void print_hex(uint32_t value) {
   }
 
   while (i > 0) {
-    terminal_putchar(buf[--i]);
+    terminal_putchar(buf[--i], terminal_color);
   }
 }
 
-// The main function this file exposes.
-// Every other function is a helper function.
-int printf(const char *format, ...) {
-  // Uses va_list, va_start, va_end to have a undefined amount of arguments
-  // given to the function.
-  va_list args;
-  va_start(args, format);
-
+static int vprintf_color(const char *format, va_list args,
+                         uint8_t terminal_color) {
   // loops through every character and selects the appropriate helper function
   // to use for printing.
   for (int i = 0; format[i] != '\0'; i++) {
@@ -139,17 +133,34 @@ int printf(const char *format, ...) {
         print_hex(va_arg(args, uint32_t));
         break;
       case 'c':
-        terminal_putchar((char)va_arg(args, int));
+        terminal_putchar((char)va_arg(args, int), terminal_color);
         break;
       case '%':
-        terminal_putchar('%');
+        terminal_putchar('%', terminal_color);
         break;
       }
     } else {
-      terminal_putchar(format[i]);
+      terminal_putchar(format[i], terminal_color);
     }
   }
+}
 
+int printf_color(const char *format, uint8_t terminal_color, ...) {
+  // Uses va_list, va_start, va_end to have a undefined amount of arguments
+  // given to the function.
+  va_list args;
+  va_start(args, terminal_color);
+  vprintf_color(format, args, terminal_color);
+  va_end(args);
+  return 0;
+}
+
+// The main function this file exposes.
+// Every other function is a helper function.
+int printf(const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  vprintf_color(format, args, terminal_color);
   va_end(args);
   return 0;
 }
@@ -157,5 +168,11 @@ int printf(const char *format, ...) {
 void clearTerminal() {
   for (int i = 0; i < VGA_HEIGHT; i++) {
     terminal_write("\n");
+  }
+}
+
+void terminal_write_color(const char *str, uint8_t terminal_color) {
+  for (int i = 0; str[i] != '\0'; i++) {
+    terminal_putchar(str[i], terminal_color);
   }
 }

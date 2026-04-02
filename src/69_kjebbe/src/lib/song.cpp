@@ -49,7 +49,8 @@ void play_sound(uint32_t frequency) {
 
 void play_song_impl(Song *song) {
   for (uint32_t i = 0; i < song->length; i++) {
-    if (active_program != PROGRAM_RADIO) {
+    if (active_program != PROGRAM_RADIO &&
+        active_program != PROGRAM_FEDRELANDET) {
       return;
     }
     // enable the speaker for each note in case previous note was no sound.

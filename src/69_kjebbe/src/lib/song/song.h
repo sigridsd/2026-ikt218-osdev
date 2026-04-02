@@ -1,5 +1,12 @@
 #ifndef SONG_H
 #define SONG_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "../../../include/kernel/memory.h"
+#ifdef __cplusplus
+}
+#endif
 #include "../../../include/libc/stdint.h"
 #include "frequencies.h"
 
@@ -92,5 +99,119 @@ static Note music_6[] = {
     {A_SHARP4, 500}, {A_SHARP4, 250}, {A_SHARP4, 250}, {A_SHARP4, 250},
     {F5, 250},       {D5, 250},       {C5, 250},       {A_SHARP4, 500},
 };
+static const int bar = 3000;
+static const int half = bar / 2;
+static const int quarter = bar / 4;
+static const int eight = bar / 8;
+static const int sixteenth = bar / 16;
+static const int half_dot = bar / 4 + quarter;
+static const int quarter_dot = bar / 4 + eight;
+static const int eight_dot = bar / 4 + sixteenth;
+
+static Note nasjonal_sangen[] = {
+    // takt 1
+    {G4, quarter_dot},
+    {F4, eight},
+    {E4, quarter},
+    {D4, quarter},
+    // takt 2
+    {C4, quarter},
+    {D4, quarter},
+    {E4, quarter},
+    {F4, quarter},
+    // takt 3
+    {G4, quarter_dot},
+    {A4, eight},
+    {G4, quarter},
+    {F4, quarter},
+    // takt 4
+    {E4, half_dot},
+    {R, quarter},
+    // takt 5
+    {A4, quarter_dot},
+    {G4, eight},
+    {F4, quarter},
+    {E4, quarter},
+    // takt 6
+    {D4, quarter},
+    {E4, quarter},
+    {F4, quarter},
+    {G4, quarter},
+    // takt 7
+    {G4, quarter_dot},
+    {A4, eight},
+    {A4, quarter},
+    {B4, quarter},
+    // takt 8
+    {C5, half},
+    {R, half},
+    // takt 9
+    {C5, quarter_dot},
+    {C5, eight},
+    {B4, eight_dot},
+    {B4, sixteenth},
+    {A4, eight_dot},
+    {A4, sixteenth},
+    // takt 10
+    {G4, half},
+    {E4, quarter},
+    {R, quarter},
+    // takt 11
+    {A4, quarter_dot},
+    {A4, eight},
+    {G4, quarter},
+    {G4, quarter},
+    // takt 12
+    {F4, half},
+    {R, quarter},
+    {G4, eight_dot},
+    {G4, sixteenth},
+    // takt 13
+    {G4, quarter},
+    {A4, quarter},
+    {A4, quarter},
+    {B4, quarter},
+    // takt 14
+    {B4, half},
+    {C5, half},
+    // takt 15
+    {C5, quarter_dot},
+    {C5, eight},
+    {B4, quarter},
+    {C5, quarter},
+    // takt 16
+    {D5, half},
+    {R, quarter},
+    {D5, eight_dot},
+    {D5, sixteenth},
+    // takt 17
+    {D5, quarter},
+    {E5, quarter},
+    {F5, quarter},
+    {E5, quarter},
+    // takt 18
+    {D5, half},
+    {C5, quarter},
+    {B4, eight_dot},
+    {A4, sixteenth},
+    // takt 19
+    {G4, quarter_dot},
+    {A4, eight},
+    {A4, quarter},
+    {B4, quarter},
+    // takt 20
+    {C5, bar},
+
+};
+
+static Song add_space_between_notes(Song *song, uint32_t breath_ms) {
+  Note *new_notes = (Note *)malloc(sizeof(Note) * song->length * 2);
+  for (uint32_t i = 0; i < song->length; i++) {
+    new_notes[i * 2] =
+        (Note){song->notes[i].frequency, song->notes[i].duration - breath_ms};
+    new_notes[i * 2 + 1] = (Note){R, breath_ms};
+  }
+  return (Song){new_notes, song->length * 2};
+}
 
 #endif
