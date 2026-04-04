@@ -70,9 +70,9 @@ add_executable(uiaos-kernel
 	src/interrupts/isr.c
 	src/interrupts/interrupts.asm
 	src/interrupts/keyboard.c
-	src/memory/memutils.c
-	src/memory/malloc.c
-	src/memory/memory.c
+	src/libc/memory.c
+	src/memory/heap.c
+	src/memory/paging.c
 
 	src/libc/string.c
 	src/libc/stdio.c

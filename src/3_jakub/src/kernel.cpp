@@ -1,4 +1,4 @@
-#include "kernel/memory.h"
+#include "kernel/heap.h"
 #include "libc/libs.h"
 
 struct allocation_probe_t {

@@ -7,6 +7,10 @@
 extern "C" {
 #endif
 
+/*
+ * Channel 0 is used by the kernel timer in init_pit().
+ * Channel 2 is available for PC speaker sound generation in Assignment 5.
+ */
 #define PIT_CMD_PORT 0x43
 #define PIT_CHANNEL0_PORT 0x40
 #define PIT_CHANNEL1_PORT 0x41

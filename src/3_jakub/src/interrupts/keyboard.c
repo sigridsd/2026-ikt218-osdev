@@ -1,7 +1,7 @@
 #include "interrupts/keyboard.h"
 #include "interrupts/isr.h"
 #include "common.h"
-#include "kernel/memory.h"
+#include "kernel/heap.h"
 #include "kernel/pit.h"
 #include "libc/stdio.h"
 
