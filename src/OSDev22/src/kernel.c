@@ -37,11 +37,6 @@ int main(uint32_t magic, struct multiboot_info* mb_info_addr) {
     printf("Interrupt-system aktivert!\n");
     printf("Write something on keybords:\n");
 
-    /*
-     * Hovedloop - holder kernelen i live.
-     * hlt setter CPU-en i lavstrøm-modus til neste interrupt.
-     * Uten denne loopen ville main() returnert og kræsjet.
-     */
     for (;;) {
         asm volatile("hlt");
     }
