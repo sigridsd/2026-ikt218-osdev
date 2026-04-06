@@ -3,6 +3,7 @@
 #include "common.h"
 #include "kernel/heap.h"
 #include "kernel/pit.h"
+#include "song/song.h"
 #include "libc/stdio.h"
 
 // Scancode to ASCII lookup table (US QWERTY layout)
@@ -175,9 +176,11 @@ static void print_help(void)
     printf("clearhistory Free saved history entries\n");
     printf("ticks        Show current PIT tick count\n");
     printf("uptime       Show uptime in milliseconds\n");
+    printf("music <idx>  Play the song with index (0-7)\n");
     printf("echo <text>  Print text back to the screen\n");
     printf("about        Show kernel feature summary\n");
     printf("Keyboard:\n");
+    printf("ESC          Stop playing music\n");
     printf("PgUp/PgDn    Scroll terminal history by pages\n");
     printf("Up/Down      Scroll terminal history line by line\n");
     printf("Home/End     Jump to top or bottom of scrollback\n");
@@ -271,6 +274,25 @@ static void execute_command(const char *command)
         return;
     }
 
+    if (keyboard_startswith(command, "music")) {
+        const char *arg = skip_spaces(command + 5);
+        if (*arg == '\0') {
+            printf("Usage: music <song_index>\nAvailable songs: 0-7\n");
+            return;
+        }
+        int song_index = 0;
+        while (*arg >= '0' && *arg <= '9') {
+            song_index = song_index * 10 + (*arg - '0');
+            arg++;
+        }
+        if (*arg != '\0') {
+            printf("Invalid song index: %s\n", skip_spaces(command + 5));
+            return;
+        }
+        play_music(song_index);
+        return;
+    }
+
     if (keyboard_startswith(command, "echo")) {
         argument = skip_spaces(command + 4);
         printf("%s\n", argument);
@@ -360,6 +382,10 @@ static void keyboard_callback(registers_t *regs) {
         }
     } else {
         // Key press
+        if (scancode == 0x01) { // ESC key
+            stop_music();
+            return;
+        }
         if (scancode == 0x2A || scancode == 0x36) {
             shift_pressed = 1;
         } else {
