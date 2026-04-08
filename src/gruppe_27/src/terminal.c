@@ -129,6 +129,13 @@ void terminal_write(const char* data) {
         terminal_putchar(data[i]);
     }
 }
+void terminal_write_dec(uint32_t v) {
+    if (v == 0) { terminal_putchar('0'); return; }
+    char buf[11]; int i = 10;
+    buf[i] = '\0';
+    while (v) { buf[--i] = '0' + (v % 10); v /= 10; }
+    terminal_write(buf + i);
+}
 
 void terminal_initialize() {
     terminal_row = 0;

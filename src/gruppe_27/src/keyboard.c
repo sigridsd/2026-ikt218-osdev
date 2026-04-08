@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "shell.h"
 
+
 static int shift_pressed = 0;
 // The actual table lives here
 unsigned char kbd_us[128] = {
@@ -28,10 +29,28 @@ unsigned char kbd_us_upper[128] = {
 char kbd_buffer[256];
 int kbd_pos = 0;
 
+
+static volatile int keyboard_locked = 0;
+
+void keyboard_flush() {
+    kbd_pos = 0;
+    kbd_buffer[0] = '\0';
+}
+
+
+void keyboard_set_lock(int locked) {
+    keyboard_locked = locked;
+    keyboard_flush();
+     __asm__ __volatile__("inb $0x60, %al");
+    
+}
+
+
 void keyboard_handler(struct registers *r) {
 
     uint8_t scancode = inb(0x60);
-
+    //keyboard lock
+    if (keyboard_locked == 1) return;
 
 
     if (scancode == 0x2A || scancode == 0x36) {

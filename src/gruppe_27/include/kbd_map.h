@@ -16,4 +16,6 @@ extern unsigned char kbd_us_upper[128];
 #define SCAN_UP    0x48
 #define SCAN_DOWN  0x50
 
+void keyboard_set_lock(int locked);
+
 #endif

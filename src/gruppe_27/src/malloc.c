@@ -147,7 +147,45 @@ void *malloc(size_t size) {
         }
         return dest;
     }
+    
  
+void print_heap_info() {
+    terminal_write("\n=== Heap Info ===\n");
+    terminal_write("Heap start: ");
+    print_hex((uint32_t)heap_start);
+    terminal_write("\nHeap end:   ");
+    print_hex((uint32_t)heap_end);
+    terminal_write("\nHeap max:   ");
+    print_hex((uint32_t)heap_max);
+
+    uint32_t used = 0, free_bytes = 0;
+    int total_blocks = 0, free_blocks = 0, used_blocks = 0;
+
+    block_header_t *cur = free_list;
+    while (cur) {
+        total_blocks++;
+        if (cur->free) {
+            free_blocks++;
+            free_bytes += cur->size;
+        } else {
+            used_blocks++;
+            used += cur->size;
+        }
+        cur = cur->next;
+    }
+
+    terminal_write("\nUsed:       ");
+    print_dec(used);
+    terminal_write(" bytes\nFree:       ");
+    print_dec(free_bytes);
+    terminal_write(" bytes\nTotal blocks: ");
+    print_dec(total_blocks);
+    terminal_write(" (");
+    print_dec(used_blocks);
+    terminal_write(" used, ");
+    print_dec(free_blocks);
+    terminal_write(" free)\n=== End Heap Info ===\n");
+}
 // ─── free ────────────────────────────────────────────────────────────────────
  
 void free(void *ptr) {

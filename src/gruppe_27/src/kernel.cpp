@@ -2,7 +2,9 @@ extern "C" {
     #include "terminal.h"
     #include "idt.h"
     #include "memory.h"
-}
+    #include "pit.h"
+    #include "kbd_map.h"
+};
  
 // ─── Global operator new / delete (backed by our kernel malloc) ──────────────
  
@@ -20,13 +22,6 @@ extern "C" int kernel_main();
 // ─── kernel_main ─────────────────────────────────────────────────────────────
 // Everything here runs after the heap and paging are already up.
 int kernel_main() {
- 
-    // ── ISR smoke test ───────────────────────────────────────────────────────
-    // (sleep() is defined in kernel.c and visible via extern "C" linkage)
- 
-    __asm__ __volatile__("int $0");
-    __asm__ __volatile__("int $1");
-    __asm__ __volatile__("int $2");
  
     // ── malloc / new demo ────────────────────────────────────────────────────
  
@@ -55,9 +50,31 @@ int kernel_main() {
         terminal_write("Array via new[]: allocated and filled\n");
         delete[] arr;
     }
+    // ── ISR smoke test ───────────────────────────────────────────────────────
+ 
+    __asm__ __volatile__("int $0");
+    __asm__ __volatile__("int $1");
+    __asm__ __volatile__("int $2");
+
+    // pit timer
+    /*keyboard_set_lock(1);
+    int counter = 0;
+
+    terminal_write("[");
+    terminal_write_dec(counter);
+    terminal_write("]: Sleeping with busy-waiting (HIGH CPU).\n");
+    sleep_busy(1000);
+    terminal_write("[");
+    terminal_write_dec(counter++);
+    terminal_write("]: Slept using busy-waiting.\n");
+
+    keyboard_set_lock(0);*/
+
+     // drain the keyboard buffer
  
     // ── Main loop ────────────────────────────────────────────────────────────
  
+
     terminal_write("Kernel ready for commands\n");
     
     while (true) {
