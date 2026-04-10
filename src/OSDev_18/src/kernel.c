@@ -1,6 +1,6 @@
 #include <libc/stdint.h>
 
-void kernel_main(void) {
+void main(void) {
     for (;;) {
         __asm__ volatile ("hlt");
     }
