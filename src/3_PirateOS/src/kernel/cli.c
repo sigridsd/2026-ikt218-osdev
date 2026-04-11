@@ -14,6 +14,7 @@ static char *history_entries[HISTORY_CAPACITY];
 static int history_count = 0;
 static int history_start = 0;
 
+// Local strlen to avoid pulling in extra libc helpers here
 static size_t cli_strlen(const char *text)
 {
     size_t length = 0;
@@ -25,6 +26,7 @@ static size_t cli_strlen(const char *text)
     return length;
 }
 
+// Checks if two strings are exactly equal
 static int cli_streq(const char *left, const char *right)
 {
     size_t index = 0;
@@ -40,6 +42,7 @@ static int cli_streq(const char *left, const char *right)
     return left[index] == right[index];
 }
 
+// Checks if command begins with a given prefix
 static int cli_startswith(const char *text, const char *prefix)
 {
     size_t index = 0;
@@ -55,6 +58,7 @@ static int cli_startswith(const char *text, const char *prefix)
     return 1;
 }
 
+// Skips spaces before parsing command arguments
 static const char *skip_spaces(const char *text)
 {
     while (*text == ' ') {
@@ -64,6 +68,7 @@ static const char *skip_spaces(const char *text)
     return text;
 }
 
+// Frees all saved command history entries
 static void clear_history(void)
 {
     int i;
@@ -79,6 +84,7 @@ static void clear_history(void)
     history_start = 0;
 }
 
+// Prints command history in oldest to newest order
 static void print_history(void)
 {
     int i;
@@ -96,6 +102,7 @@ static void print_history(void)
     }
 }
 
+// Displays available commands and keyboard shortcuts
 static void print_help(void)
 {
     printf("Commands:\n");
@@ -118,6 +125,7 @@ static void print_help(void)
     printf("Home/End     Jump to top or bottom of scrollback\n");
 }
 
+// Prints a short summary of current kernel features
 static void print_about(void)
 {
     terminal_print_logo();
@@ -125,6 +133,7 @@ static void print_about(void)
     printf("History entries are stored on the heap.\n");
 }
 
+// Triggers a software exception without causing a real CPU fault
 static void show_exception_without_fault(uint32_t interrupt_number)
 {
     registers_t regs = {0};
@@ -132,6 +141,7 @@ static void show_exception_without_fault(uint32_t interrupt_number)
     isr_handler(&regs);
 }
 
+// Runs through CPU exceptions to test ISR output
 static void run_interrupt_demo(void)
 {
     terminal_initialize();
@@ -174,6 +184,7 @@ static void run_interrupt_demo(void)
     printf("\nDone triggering CPU exceptions 0x00-0x1F.\n");
 }
 
+// Stores a command line in fixed-size circular history
 static void save_history_entry(const char *line)
 {
     size_t length = cli_strlen(line);
@@ -207,6 +218,7 @@ static void save_history_entry(const char *line)
     history_entries[slot] = entry;
 }
 
+// Main command dispatcher for the terminal
 static void execute_command(const char *command)
 {
     const char *argument;
@@ -312,12 +324,8 @@ void cli_submit_line(const char *line)
         return;
     }
 
+    // Save then execute so user can review previous commands
     save_history_entry(line);
     execute_command(line);
     cli_print_prompt();
-}
-
-void cli_handle_escape(void)
-{
-    stop_music();
 }

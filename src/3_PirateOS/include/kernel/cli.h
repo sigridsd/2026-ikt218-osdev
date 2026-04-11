@@ -11,9 +11,6 @@ void cli_print_prompt(void);
 // Runs one full command line
 void cli_submit_line(const char *line);
 
-// Handles ESC while the terminal is active
-void cli_handle_escape(void);
-
 #ifdef __cplusplus
 }
 #endif

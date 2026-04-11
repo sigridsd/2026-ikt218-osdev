@@ -25,7 +25,6 @@ typedef struct {
 // Returns a pointer to a newly created SongPlayer object
 SongPlayer* create_song_player();
 
-void play_song_impl(Song *song);
 void play_sound(uint32_t frequency);
 void stop_sound(void);
 void play_music(int song_index);

@@ -3,6 +3,7 @@
 #include "kernel/cli.h"
 #include "common.h"
 #include "apps/raycaster/raycaster.h"
+#include "apps/song/song.h"
 #include "libc/stdio.h"
 
 // Scancode to ASCII lookup table (US QWERTY layout).
@@ -102,6 +103,20 @@ int shift_pressed = 0; // Flag to track whether either Shift key is currently pr
 static int extended_scancode = 0; // Flag to track whether the last scancode was the start of an extended sequence (0 = no, 1 = yes)
 static volatile char last_key_pressed = 0; // Store the last key pressed for games to read asynchronously
 
+// Route ESC based on active mode
+static void handle_escape_key(void)
+{
+    if (raycaster_input_is_active()) {
+        // In game mode ESC should exit game and silence audio
+        raycaster_input_request_exit();
+        stop_sound();
+        return;
+    }
+
+    // In terminal mode ESC stops music playback
+    stop_music();
+}
+
 static void handle_extended_scancode(uint8_t scancode) // Handle special keys that send extended scancodes (those that start with 0xE0)
 {
     uint8_t released = scancode & 0x80; // Check if the top bit is set to determine if it's a key release (1) or key press (0)
@@ -151,6 +166,7 @@ static void keyboard_callback(registers_t *regs) { // This function is called ev
     uint8_t scancode = inb(0x60);
 
     if (raycaster_input_is_active()) { // If the game is active, we want to capture all keys (including extended keys) and send them to the game input handler, without processing any commands or special keys
+        // Forward raw scancodes to the game input queue
         raycaster_input_submit_scancode(scancode);
     }
 
@@ -161,6 +177,7 @@ static void keyboard_callback(registers_t *regs) { // This function is called ev
 
     if (extended_scancode) { // If the extended scancode flag is set, we know the current scancode is part of an extended sequence, so we handle it accordingly and then clear the flag
         extended_scancode = 0;
+        // Handle arrows and paging keys
         handle_extended_scancode(scancode);
         return;
     }
@@ -184,10 +201,7 @@ static void keyboard_callback(registers_t *regs) { // This function is called ev
             if (scancode == 0x01) {
                 ascii = 27;  // ESC code
                 last_key_pressed = ascii;
-                raycaster_input_request_exit(); // If the game is active, request it to exit. If not, handle as a normal command (which will also exit any active game mode)
-                if (!raycaster_input_is_active()) { // If the game is not active, also handle the ESC key as a normal command to exit any active CLI mode or return to the main prompt
-                    cli_handle_escape(); // Handle the ESC key in the CLI to exit any active mode or return to the main prompt
-                }
+                handle_escape_key();
                 return;
             }
             

@@ -6,6 +6,7 @@
 
 static void raycaster_play_note_internal(const Note *note)
 {
+    // R means rest so speaker should be silent
     if (note->frequency == R) {
         stop_sound();
         return;
@@ -38,6 +39,7 @@ static void raycaster_update_background_theme(uint32_t current_ticks, uint32_t *
 
     // If we lagged behind, advance through as many notes as needed.
     while ((int32_t)(current_ticks - *note_end_tick) >= 0) {
+        // Move to next note and wrap when the song reaches the end
         *current_note_index = (*current_note_index + 1U) % bg_theme_len;
         const Note *note = &raycaster_bg_theme[*current_note_index];
         raycaster_play_note_internal(note);
@@ -62,6 +64,9 @@ void raycaster_game_loop(void)
     Raycaster raycaster;
     raycaster_init(&raycaster);
 
+    // Restart background music from the first note for each game launch.
+    stop_sound();
+    music_index = 0;
     raycaster_start_background_theme(pit_get_ticks(), &music_index, &next_note_tick);
 
     // Current key state used by movement/rotation code
@@ -82,6 +87,11 @@ void raycaster_game_loop(void)
 
         // Poll current controls (WASD/QE + instant keys)
         char instant_key = raycaster_poll_controls_internal(&raycaster, key_down);
+        if (!raycaster.game_running) {
+            stop_sound();
+            break;
+        }
+
         // Exit requested by keyboard handler
         if (raycaster_input_consume_exit_request_internal()) {
             raycaster.game_running = false;
@@ -118,12 +128,14 @@ void raycaster_game_loop(void)
         }
 
         if (exit_now) {
+            // Skip update and render work when exit was requested this frame
             break;
         }
 
         // Add elapsed real time to fixed-step physics accumulator
         uint32_t elapsed_ms = current_ticks - last_physics_tick;
         last_physics_tick = current_ticks;
+        // Clamp big jumps so movement stays predictable after lag spikes
         if (elapsed_ms > 100) elapsed_ms = 100;
         physics_accumulator += elapsed_ms;
 
@@ -136,6 +148,7 @@ void raycaster_game_loop(void)
         else if (instant_key == 'e' || instant_key == 'E') key_down[RC_KEY_E] = 1;
 
         if (instant_key != 0 && physics_accumulator < RAYCASTER_PHYSICS_STEP_MS) {
+            // Force one physics step so tap input feels responsive
             physics_accumulator = RAYCASTER_PHYSICS_STEP_MS;
         }
 

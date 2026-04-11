@@ -9,6 +9,28 @@
 // Flag to stop music
 static volatile int music_stop_flag = 0;
 
+// Wait for the note duration while still allowing ESC to stop playback
+static int sleep_interruptible(uint32_t milliseconds)
+{
+    uint32_t start_ticks;
+
+    if (milliseconds == 0) {
+        return music_stop_flag ? 1 : 0;
+    }
+
+    start_ticks = pit_get_ticks();
+    while ((pit_get_ticks() - start_ticks) < milliseconds) {
+        // Stop immediately if ESC requested music stop
+        if (music_stop_flag) {
+            return 1;
+        }
+        // Sleep until next interrupt to avoid busy waiting
+        asm volatile("sti\nhlt");
+    }
+
+    return music_stop_flag ? 1 : 0;
+}
+
 // Function to enable the PC speaker
 void enable_speaker(){
     // Read the current state of the PC speaker control register
@@ -39,8 +61,12 @@ void disable_speaker() {
 // Function for playing a sound at a specific frequency
 void play_sound(uint32_t frequency) {
     if (frequency == 0) {
+        stop_sound();
         return;
     }
+
+    // Reset speaker gate first to avoid carrying stale tone into the new note.
+    stop_sound();
 
     uint16_t divisor = (uint16_t)(PIT_BASE_FREQUENCY / frequency);
 
@@ -49,23 +75,22 @@ void play_sound(uint32_t frequency) {
     outb(PIT_CHANNEL2_PORT, (uint8_t)(divisor & 0xFF));
     outb(PIT_CHANNEL2_PORT, (uint8_t)(divisor >> 8));
 
-    // Enable the speaker by setting bits 0 and 1
-    uint8_t speaker_state = inb(PC_SPEAKER_PORT);
-    outb(PC_SPEAKER_PORT, speaker_state | 0x03);
+    enable_speaker();
 }
 
 // Function to stop the sound
 void stop_sound(){
-    // Stop the sound by disabling the gate to the speaker
-    uint8_t speaker_state = inb(PC_SPEAKER_PORT);
-    // Clear bits 0 and 1
-    outb(PC_SPEAKER_PORT, speaker_state & ~0x03);
+    disable_speaker();
+
+    // Reset channel 2 state so no stale tone continues after stop.
+    outb(PIT_CMD_PORT, 0b10110110);
+    outb(PIT_CHANNEL2_PORT, 0);
+    outb(PIT_CHANNEL2_PORT, 0);
 }
 
 // Function for playing a song (sequence of notes)
 void play_song(Song *song) {
     music_stop_flag = 0;  // Reset flag
-    enable_speaker(); // Turn on the speaker
 
     // Loop through each note in the song
     for (uint32_t i = 0; i < song->length; i++) {
@@ -76,13 +101,18 @@ void play_song(Song *song) {
         Note* note = &song->notes[i]; // Go to the next note
         //printf("Note: %d, Freq=%d, Sleep=%d\n", i, note->frequency, note->duration); // Debug output
         play_sound(note->frequency); // Play the note
-        sleep_interrupt(note->duration); // Sleep for the duration of the note
+        if (sleep_interruptible(note->duration)) {
+            stop_sound();
+            printf("Music stopped by user.\n");
+            break;
+        }
         stop_sound(); // Stop the sound
     }
     disable_speaker(); // Turn off the speaker after the song is done
 }
 
 SongPlayer* create_song_player() {
+    // Small wrapper object that exposes a play function pointer
     SongPlayer* player = (SongPlayer*)malloc(sizeof(SongPlayer));
     if (player) {
         player->play_song = play_song;
@@ -104,6 +134,11 @@ void play_music(int song_index) {
         printf("Failed to create song player.\n");
         return;
     }
+
+    // Ensure a clean restart when running the music command repeatedly
+    stop_sound();
+    music_stop_flag = 0;
+
     printf("Playing song %d...\n", song_index);
     
     // Play the selected song
@@ -116,5 +151,7 @@ void play_music(int song_index) {
 }
 
 void stop_music(void) {
+    // ESC path uses this to stop current playback immediately
     music_stop_flag = 1;
+    stop_sound();
 }
