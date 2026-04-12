@@ -21,13 +21,22 @@ typedef struct {
     void (*play_song)(Song* song); // Function pointer to a function that plays a song
 } SongPlayer;
 
-// Function prototype for creating a new SongPlayer instance
-// Returns a pointer to a newly created SongPlayer object
+// Allocate and initialize a song player.
 SongPlayer* create_song_player();
 
+// Play all notes in the provided song.
+void play_song_impl(Song *song);
+
+// Configure PIT channel 2 and start a tone.
 void play_sound(uint32_t frequency);
+
+// Stop any tone currently playing.
 void stop_sound(void);
+
+// Play one of the predefined songs by index.
 void play_music(int song_index);
+
+// Request current music playback to stop.
 void stop_music(void);
 
 #endif

@@ -42,7 +42,6 @@ extern "C" int kernel_main(void);
 
 int kernel_main()
 {
-    // Keep kernel alive and execute deferred commands outside IRQ context.
     while (1) {
         if (raycaster_input_consume_launch_request()) {
             raycaster_game_loop();

@@ -6,32 +6,47 @@
 #include "arch/i386/io.h"
 #include "libc/stdio.h"
 
-// Flag to stop music
+// Stop flag for active playback
 static volatile int music_stop_flag = 0;
 
-// Wait for the note duration while still allowing ESC to stop playback
-static int sleep_interruptible(uint32_t milliseconds)
+// Wait for note duration and stop early if ESC was pressed
+// Returns 1 when playback should stop and returns 0 when full wait completed
+static int wait_note_or_stop(uint32_t milliseconds)
 {
+    // Tick value when this wait starts
     uint32_t start_ticks;
 
+    // Number of PIT ticks to wait for this note
+    uint32_t ticks_to_wait;
+
+    // If note length is 0 ms, skip waiting and just return current stop state
     if (milliseconds == 0) {
-        return music_stop_flag ? 1 : 0;
+        return music_stop_flag;
     }
 
+    // Read current global tick counter
     start_ticks = pit_get_ticks();
-    while ((pit_get_ticks() - start_ticks) < milliseconds) {
-        // Stop immediately if ESC requested music stop
+
+    // Convert milliseconds to PIT ticks
+    ticks_to_wait = milliseconds * TICKS_PER_MS;
+
+    // Loop until enough ticks have passed
+    while ((pit_get_ticks() - start_ticks) < ticks_to_wait) {
+        // Exit immediately when stop was requested by ESC
         if (music_stop_flag) {
             return 1;
         }
-        // Sleep until next interrupt to avoid busy waiting
+
+        // Enable interrupts and sleep until next interrupt
+        // This avoids busy waiting and keeps CPU usage low
         asm volatile("sti\nhlt");
     }
 
-    return music_stop_flag ? 1 : 0;
+    // Return current stop flag state when wait is done
+    return music_stop_flag;
 }
 
-// Function to enable the PC speaker
+// Turn speaker output on by setting bit 0 and bit 1
 void enable_speaker(){
     // Read the current state of the PC speaker control register
     uint8_t speaker_state = inb(PC_SPEAKER_PORT);
@@ -50,23 +65,17 @@ void enable_speaker(){
     }
 }
 
-// Function to disable the PC speaker
+// Turn speaker output off by clearing bit 0 and bit 1
 void disable_speaker() {
-    // Turn off the PC speaker
     uint8_t speaker_state = inb(PC_SPEAKER_PORT);
-    // Clear bits 0 and 1 to disable the speaker
     outb(PC_SPEAKER_PORT, speaker_state & 0xFC);
 }
 
-// Function for playing a sound at a specific frequency
+// Program PIT channel 2 to generate one tone frequency
 void play_sound(uint32_t frequency) {
     if (frequency == 0) {
-        stop_sound();
         return;
     }
-
-    // Reset speaker gate first to avoid carrying stale tone into the new note.
-    stop_sound();
 
     uint16_t divisor = (uint16_t)(PIT_BASE_FREQUENCY / frequency);
 
@@ -75,44 +84,58 @@ void play_sound(uint32_t frequency) {
     outb(PIT_CHANNEL2_PORT, (uint8_t)(divisor & 0xFF));
     outb(PIT_CHANNEL2_PORT, (uint8_t)(divisor >> 8));
 
+    // Enable speaker after frequency is loaded
     enable_speaker();
 }
 
-// Function to stop the sound
+// Stop current tone
 void stop_sound(){
     disable_speaker();
+}
 
-    // Reset channel 2 state so no stale tone continues after stop.
-    outb(PIT_CMD_PORT, 0b10110110);
-    outb(PIT_CHANNEL2_PORT, 0);
-    outb(PIT_CHANNEL2_PORT, 0);
+// Core loop that plays all notes in order
+void play_song_impl(Song *song) {
+    if (!song || !song->notes || song->length == 0) {
+        return;
+    }
+
+    // Make sure speaker is ready before first note
+    enable_speaker();
+
+    for (uint32_t i = 0; i < song->length; i++) {
+        // Break if stop was requested
+        if (music_stop_flag) {
+            break;
+        }
+
+        Note* note = &song->notes[i];
+
+        // Frequency 0 means pause
+        if (note->frequency == 0) {
+            stop_sound();
+            if (wait_note_or_stop(note->duration)) {
+                break;
+            }
+            continue;
+        }
+
+        // Normal note playback
+        play_sound(note->frequency);
+        if (wait_note_or_stop(note->duration)) {
+            break;
+        }
+    }
+    stop_sound();
 }
 
 // Function for playing a song (sequence of notes)
 void play_song(Song *song) {
     music_stop_flag = 0;  // Reset flag
-
-    // Loop through each note in the song
-    for (uint32_t i = 0; i < song->length; i++) {
-        if (music_stop_flag) {
-            printf("Music stopped by user.\n");
-            break; // Stop playing if the flag is set
-        }
-        Note* note = &song->notes[i]; // Go to the next note
-        //printf("Note: %d, Freq=%d, Sleep=%d\n", i, note->frequency, note->duration); // Debug output
-        play_sound(note->frequency); // Play the note
-        if (sleep_interruptible(note->duration)) {
-            stop_sound();
-            printf("Music stopped by user.\n");
-            break;
-        }
-        stop_sound(); // Stop the sound
-    }
-    disable_speaker(); // Turn off the speaker after the song is done
+    play_song_impl(song);
 }
 
 SongPlayer* create_song_player() {
-    // Small wrapper object that exposes a play function pointer
+    // Allocate player object and attach play callback
     SongPlayer* player = (SongPlayer*)malloc(sizeof(SongPlayer));
     if (player) {
         player->play_song = play_song;
@@ -122,7 +145,7 @@ SongPlayer* create_song_player() {
 
 // Function to play a specific song by index
 void play_music(int song_index) {
-    // Check if index is valid
+    // Validate index before accessing array
     if (song_index < 0 || (uint32_t)song_index >= available_song_count) {
         printf("Invalid song index. Available songs: 0-%u\n", available_song_count - 1);
         return;
@@ -134,10 +157,6 @@ void play_music(int song_index) {
         printf("Failed to create song player.\n");
         return;
     }
-
-    // Ensure a clean restart when running the music command repeatedly
-    stop_sound();
-    music_stop_flag = 0;
 
     printf("Playing song %d...\n", song_index);
     
@@ -151,7 +170,7 @@ void play_music(int song_index) {
 }
 
 void stop_music(void) {
-    // ESC path uses this to stop current playback immediately
+    // Set stop flag and silence speaker
     music_stop_flag = 1;
     stop_sound();
 }
