@@ -66,6 +66,9 @@ add_executable(uiaos-kernel
 	../gdt/gdt.c
 	../gdt/gdt.asm
 	src/vga/vga.c
+	src/kernel_memory.c
+	src/pit.c
+	src/stdio.c
 	../isr/isr.c
 	../isr/isr.asm
 	../irq/irq.c
