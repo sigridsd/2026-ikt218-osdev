@@ -2,7 +2,9 @@
 #define SONG_H
 
 #include "frequencies.h"
-#include "libc/system.h"
+#include "libc/stdint.h"
+#include "libc/stdbool.h"
+#include "libc/stddef.h"
 
 // Define a struct to represent a single musical note
 typedef struct {
@@ -25,6 +27,8 @@ typedef struct {
 // Returns a pointer to a newly created SongPlayer object
 SongPlayer* create_song_player();
 void play_song_impl(Song *song) ;
+void play_song(Song *song);
+
 
 static Note music_1[] = {
     {E5, 250}, {R, 125}, {E5, 125}, {R, 125}, {E5, 125}, {R, 125},
@@ -121,5 +125,6 @@ static Note music_6[] = {
     {A_SHARP4, 250}, {A_SHARP4, 250}, {A_SHARP4, 250}, {F5, 250}, {D5, 250}, {C5, 250}, {A_SHARP4, 500},
     {A_SHARP4, 250}, {A_SHARP4, 250}, {A_SHARP4, 250}, {F5, 250}, {D5, 250}, {C5, 250}, {A_SHARP4, 500},
 };
+
 
 #endif

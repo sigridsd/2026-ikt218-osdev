@@ -2,6 +2,8 @@
 #include "string.h"
 #include "shell.h"
 #include "memory.h"
+#include "song/song.h"
+#include "pit.h"
 
 static uint32_t parse_uint(const char* str) {
     uint32_t result = 0;
@@ -11,6 +13,12 @@ static uint32_t parse_uint(const char* str) {
     }
     return result;
 }
+
+Song mario = {
+    .notes = starwars_theme,
+    .length = sizeof(starwars_theme) / sizeof(Note)
+};
+
 //possible to add more commands for help here
 void command_help(){
     terminal_write("\nCommands avalible:\nclear\nhello\nmemory\ntriangle\nsleep_b <value>\nsleep_i <value>\nhelp\n");
@@ -20,7 +28,7 @@ void command_triangle() {
     terminal_write("\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEWEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEv iIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAWv   rEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAA6v      RAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAE0        v1AAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAm           0AAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAIv             iAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAARv               vIAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAWv                 vWAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAA0                     WAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAEr                       1AAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAANm                         iAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAANr                           rIAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
 }
 void command_hello() {
-    terminal_write("Hello, this is an orange shell terminal made by Herman and Oscar");
+    terminal_write("\nHello, this is an orange shell terminal made by Herman and Oscar");
 }
 
 void command_clear() {
@@ -36,7 +44,7 @@ void command_sleep_busy(const char* args) {
     uint32_t seconds = parse_uint(args);
     terminal_write("\n");
     if (seconds == 0) {
-        terminal_write("Usage: sleep_busy <seconds>\n");
+        terminal_write("\nUsage: sleep_busy <seconds>\n");
         return;
     }
 
@@ -52,7 +60,7 @@ void command_sleep_interrupt(const char* args) {
     uint32_t seconds = parse_uint(args);
     terminal_write("\n");
     if (seconds == 0) {
-        terminal_write("Usage: sleep_interrupt <seconds>\n");
+        terminal_write("\nUsage: sleep_interrupt <seconds>\n");
         return;
     }
 
@@ -62,6 +70,10 @@ void command_sleep_interrupt(const char* args) {
         sleep_interrupt(1000);
     }
     terminal_write("Done.\n");
+}
+void command_song() {
+    terminal_write("\nNow playing mario\n");
+    play_song(&mario);
 }
 
 void shell_execute_command(char* input) {
@@ -99,6 +111,9 @@ void shell_execute_command(char* input) {
     }
     else if(strcmp(cmd, "sleep_i") == 0) {
         command_sleep_interrupt(args);
+    }
+    else if(strcmp(input, "song") == 0) {
+        command_song();
     }
     else {
         terminal_write("\n");

@@ -2,6 +2,8 @@
 #include "terminal.h"
 #include "memory.h"
 #include "shell.h"
+#include "common.h"
+#
 
 
 static int shift_pressed = 0;
