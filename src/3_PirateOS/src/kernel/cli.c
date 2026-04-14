@@ -4,6 +4,7 @@
 #include "apps/song/song.h"
 #include "apps/song/song_data.h"
 #include "arch/i386/io.h"
+#include "boot/splash.h"
 #include "memory/heap.h"
 #include "kernel/pit.h"
 #include "interrupts/isr.h"

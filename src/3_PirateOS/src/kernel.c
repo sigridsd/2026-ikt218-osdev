@@ -4,6 +4,7 @@
 #include "memory/heap.h"
 #include "memory/paging.h"
 #include "kernel/pit.h"
+#include "boot/splash.h"
 #include "descriptor_tables/idt.h"
 #include "interrupts/isr.h"
 #include "interrupts/keyboard.h"

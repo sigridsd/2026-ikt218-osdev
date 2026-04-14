@@ -1,13 +1,16 @@
 #include "libc/libs.h"
 #include "arch/i386/io.h"
-#include "kernel/pit.h"
 
-static uint16_t *const VGA_MEMORY = (uint16_t *)0xB8000; // VGA text mode buffer address
+// VGA text mode exposes the visible 80x25 character grid at physical address 0xB8000.
+// Writing a 16-bit entry here immediately updates what the user sees on screen.
+static uint16_t *const VGA_MEMORY = (uint16_t *)0xB8000;
 static size_t terminal_row = 0;                          // Current row in the terminal
 static size_t terminal_column = 0;                       // Current column in the terminal
 static size_t terminal_view_top = 0;                     // First visible row in scrollback
 static uint8_t terminal_color = 0x0F;                    // Terminal color
 static int terminal_cursor_visible = 0;
+// Keep a larger software buffer than the visible VGA window so the keyboard driver
+// can scroll through older output without losing it immediately.
 static uint16_t terminal_buffer[512][80];
 
 #define VGA_WIDTH 80
@@ -30,6 +33,8 @@ static void terminal_enable_cursor(void)
     uint8_t start;
     uint8_t end;
 
+    // Program the VGA CRT controller to show the hardware text cursor with a
+    // sensible scanline shape near the bottom of each character cell.
     outb(VGA_CRTC_INDEX_PORT, VGA_CURSOR_START_REGISTER);
     start = inb(VGA_CRTC_DATA_PORT);
     outb(VGA_CRTC_DATA_PORT, (start & 0xC0) | 13);
@@ -43,6 +48,7 @@ static void terminal_enable_cursor(void)
 
 static void terminal_disable_cursor(void)
 {
+    // Bit 5 disables the VGA text cursor entirely.
     outb(VGA_CRTC_INDEX_PORT, VGA_CURSOR_START_REGISTER);
     outb(VGA_CRTC_DATA_PORT, 0x20);
     terminal_cursor_visible = 0;
@@ -52,6 +58,8 @@ static void terminal_set_cursor_position(size_t row, size_t column)
 {
     uint16_t position = (uint16_t)(row * VGA_WIDTH + column);
 
+    // The VGA hardware cursor is addressed as a linear cell index inside the
+    // currently visible 80x25 text page.
     outb(VGA_CRTC_INDEX_PORT, VGA_CURSOR_LOCATION_LOW_REGISTER);
     outb(VGA_CRTC_DATA_PORT, (uint8_t)(position & 0xFF));
     outb(VGA_CRTC_INDEX_PORT, VGA_CURSOR_LOCATION_HIGH_REGISTER);
@@ -88,6 +96,8 @@ static void terminal_render_view(void)
     int cursor_is_visible;
     size_t visible_cursor_row;
 
+    // Copy the selected scrollback window from the software buffer into the real
+    // VGA text buffer. This is the point where terminal state becomes visible.
     for (row = 0; row < VGA_HEIGHT; row++) {
         for (column = 0; column < VGA_WIDTH; column++) {
             VGA_MEMORY[row * VGA_WIDTH + column] =
@@ -118,6 +128,8 @@ static void terminal_shift_scrollback_up(void)
     size_t row;
     size_t column;
 
+    // Once the software scrollback is full, discard the oldest line and move
+    // everything else up so new output can continue at the bottom.
     for (row = 1; row < TERMINAL_SCROLLBACK_LINES; row++) {
         for (column = 0; column < VGA_WIDTH; column++) {
             terminal_buffer[row - 1][column] = terminal_buffer[row][column];
@@ -154,6 +166,8 @@ void terminal_initialize(void)
 {
     size_t row;
 
+    // Reset both the visible terminal state and the off-screen scrollback store
+    // before drawing the first frame into VGA memory.
     terminal_row = 0;
     terminal_column = 0;
     terminal_view_top = 0;
@@ -172,79 +186,14 @@ void terminal_refresh(void)
     terminal_render_view();
 }
 
-void terminal_print_logo(void)
+void terminal_set_color(uint8_t color)
 {
-    
-    terminal_color = 0x08;
-    printf("                           .  o  .                                   \n");
-    terminal_color = 0x0F;
-    printf("                         .^^^^^^^.                                   \n");
-    terminal_color = 0x08;
-    printf("                         | X   X |                                   \n");
-    printf("                         |   ^   |                                   \n");
-    printf("                         | X   X |                                   \n");
-    terminal_color = 0x07;
-    printf("                         '-------'                                   \n");
+    terminal_color = color;
+}
 
-    
-    terminal_color = 0x06;
-    printf("                             |                                       \n");
-    printf("                             |                                       \n");
-
-    
-    terminal_color = 0x0F;
-    printf("              .______________|______________.                         \n");
-    terminal_color = 0x07;
-    printf("              |  ~  ~  ~  ~  |  ~  ~  ~  ~ |                        \n");
-    printf("              |  ~  ~  ~  ~  |  ~  ~  ~  ~ |                        \n");
-    terminal_color = 0x0F;
-    printf("              '______________________________|                        \n");
-
-    
-    terminal_color = 0x06;
-    printf("                             |                                       \n");
-
-    
-    terminal_color = 0x0C;
-    printf("          >>=====[ ");
-    terminal_color = 0x0E;
-    printf("  P I R A T E   O S  ");
-    terminal_color = 0x0C;
-    printf("]=====>                              \n");
-
-    
-    terminal_color = 0x06;
-    printf("                             |                                       \n");
-    terminal_color = 0x0F;
-    printf("       .======================|========================.              \n");
-    printf("       |    ");
-    terminal_color = 0x07;
-    printf("*");
-    terminal_color = 0x0F;
-    printf("                                    ");
-    terminal_color = 0x07;
-    printf("*");
-    terminal_color = 0x0F;
-    printf("    |              \n");
-    printf("       |                                                |              \n");
-    terminal_color = 0x08;
-    printf("        \\______________________________________________/               \n");
-    terminal_color = 0x0F;
-    printf("          \\____________________________________________/                \n");
-
-    
-    terminal_color = 0x0B;
-    printf("  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~   \n");
-    terminal_color = 0x09;
-    printf("~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  ~~~  \n");
-
-    
-    terminal_color = 0x0E;
-    printf("======================================================================\n");
-    terminal_color = 0x0F;
-
-    sleep_interrupt(3000);
-    terminal_initialize();
+uint8_t terminal_get_color(void)
+{
+    return terminal_color;
 }
 
 void terminal_scroll_line_up(void)
@@ -313,6 +262,8 @@ int putchar(int ic) // Writes a character to the terminal
 
     if (c == '\b')
     {
+        // Backspace edits the software buffer first, then re-renders the active
+        // view so the visible VGA page stays in sync.
         if (terminal_column > 0)
         {
             terminal_column--;
@@ -333,6 +284,8 @@ int putchar(int ic) // Writes a character to the terminal
 
     terminal_buffer[terminal_row][terminal_column] = vga_entry(c, terminal_color);
 
+    // We write into the software terminal buffer and only then refresh VGA memory.
+    // That keeps scrolling/history behavior independent from the physical screen.
     terminal_column++;
     if (terminal_column == VGA_WIDTH)
     {

@@ -6,6 +6,11 @@
 },
 {
   "directory": "/workspaces/2026-ikt218-osdev/build/3_PirateOS",
+  "command": "/usr/local/bin/i686-elf-gcc -I/workspaces/2026-ikt218-osdev/src/3_PirateOS/include -I/workspaces/2026-ikt218-osdev/src/3_PirateOS/. -g -Wall -Wextra -nostdinc -nostdlib -fno-builtin -fno-stack-protector -fno-stack-check -fno-lto -fPIE -m32 -march=i386 -mno-mmx -mno-sse -mno-sse2 -mno-red-zone -Wno-main -g -Wno-unused-variable -Wno-unused-parameter -std=gnu99 -o CMakeFiles/uiaos-kernel.dir/src/boot/splash.c.o -c /workspaces/2026-ikt218-osdev/src/3_PirateOS/src/boot/splash.c",
+  "file": "/workspaces/2026-ikt218-osdev/src/3_PirateOS/src/boot/splash.c"
+},
+{
+  "directory": "/workspaces/2026-ikt218-osdev/build/3_PirateOS",
   "command": "/usr/local/bin/i686-elf-gcc -I/workspaces/2026-ikt218-osdev/src/3_PirateOS/include -I/workspaces/2026-ikt218-osdev/src/3_PirateOS/. -g -Wall -Wextra -nostdinc -nostdlib -fno-builtin -fno-stack-protector -fno-stack-check -fno-lto -fPIE -m32 -march=i386 -mno-mmx -mno-sse -mno-sse2 -mno-red-zone -Wno-main -g -Wno-unused-variable -Wno-unused-parameter -std=gnu99 -o CMakeFiles/uiaos-kernel.dir/src/kernel.c.o -c /workspaces/2026-ikt218-osdev/src/3_PirateOS/src/kernel.c",
   "file": "/workspaces/2026-ikt218-osdev/src/3_PirateOS/src/kernel.c"
 },
