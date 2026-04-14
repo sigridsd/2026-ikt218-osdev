@@ -75,6 +75,7 @@ int kernel_main() {
     // ── Main loop ────────────────────────────────────────────────────────────
  
 
+    int counter = 0;
     terminal_write("Kernel ready for commands\n");
     
     while (true) {

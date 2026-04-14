@@ -12,6 +12,7 @@ volatile uint32_t get_current_tick() {
 
 static void pit_handler(struct registers *r) {
     tick++;
+
 }
 
 void init_pit() {
@@ -31,7 +32,6 @@ void init_pit() {
 void sleep_busy(uint32_t milliseconds) {
     uint32_t start_tick = get_current_tick();
     uint32_t ticks_to_wait = milliseconds * TICKS_PER_MS;
-    uint32_t elapsed_ticks = 0;
 
     while (get_current_tick() - start_tick < ticks_to_wait) {
     // Just wait for the total duration directly

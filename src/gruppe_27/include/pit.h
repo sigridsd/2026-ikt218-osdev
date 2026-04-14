@@ -14,14 +14,14 @@
 
 // IRQ0 / PIC
 #define PIC1_CMD_PORT  0x20
-#define PIC1_DATA_PORT 0x20
+#define PIC1_DATA_PORT 0x21
 #define PIC_EOI        0x20
 
 // Frequency
 #define PIT_BASE_FREQUENCY 1193180
 #define TARGET_FREQUENCY   1000
 #define DIVIDER            (PIT_BASE_FREQUENCY / TARGET_FREQUENCY)
-#define TICKS_PER_MS       (TARGET_FREQUENCY / TARGET_FREQUENCY)
+#define TICKS_PER_MS       (TARGET_FREQUENCY / 1000)
 
 void     init_pit();
 void     sleep_interrupt(uint32_t milliseconds);
