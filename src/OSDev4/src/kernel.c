@@ -6,12 +6,7 @@
 #include "serial.h"
 #include "memory.h"
 #include "pit.h"
-#include "printf.h"
-#include "song/song.h"
-
-void play_song_impl(Song* song);
-
-SongPlayer* create_song_player(void);
+#include "piano.h"
 
 extern uint32_t end;
 
@@ -90,34 +85,10 @@ int main(uint32_t magic, void* mboot_info)
     print_memory_layout();
     init_pit();
 
-    terminal_write("Hello World\n");
-    terminal_write("GDT initialized: NULL / Code / Data descriptors loaded.\n");
-    terminal_write("IDT initialized. Interrupts enabled.\n");
-
-    void* some_memory = malloc(12345);
-    void* memory2 = malloc(54321);
-    void* memory3 = malloc(13331);
-    (void)some_memory;
-    (void)memory2;
-    (void)memory3;
-    terminal_write("Memory allocated successfully.\n");
-
-    Song songs[] = {
-        {music_1, sizeof(music_1) / sizeof(Note)},
-        {starwars_theme, sizeof(starwars_theme) / sizeof(Note)},
-        {battlefield_1942_theme, sizeof(battlefield_1942_theme) / sizeof(Note)}
-    };
-    uint32_t n_songs = sizeof(songs) / sizeof(Song);
-
-    SongPlayer* player = create_song_player();
+    piano_init();
 
     while(1) {
-        uint32_t i;
-        for(i = 0; i < n_songs; i++) {
-            printf("Playing Song %d...\n", i);
-            player->play_song(&songs[i]);
-            printf("Finished playing the song.\n");
-        }
+        __asm__ volatile ("hlt");
     }
 
     return 0;

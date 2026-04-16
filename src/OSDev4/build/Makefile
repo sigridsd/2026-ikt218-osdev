@@ -371,6 +371,30 @@ src/multiboot2.asm.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/multiboot2.asm.o
 .PHONY : src/multiboot2.asm.o
 
+src/piano.o: src/piano.c.o
+.PHONY : src/piano.o
+
+# target to build an object file
+src/piano.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/piano.c.o
+.PHONY : src/piano.c.o
+
+src/piano.i: src/piano.c.i
+.PHONY : src/piano.i
+
+# target to preprocess a source file
+src/piano.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/piano.c.i
+.PHONY : src/piano.c.i
+
+src/piano.s: src/piano.c.s
+.PHONY : src/piano.s
+
+# target to generate assembly for a file
+src/piano.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/piano.c.s
+.PHONY : src/piano.c.s
+
 src/pit.o: src/pit.c.o
 .PHONY : src/pit.o
 
@@ -505,6 +529,9 @@ help:
 	@echo "... src/memory/memutils.i"
 	@echo "... src/memory/memutils.s"
 	@echo "... src/multiboot2.o"
+	@echo "... src/piano.o"
+	@echo "... src/piano.i"
+	@echo "... src/piano.s"
 	@echo "... src/pit.o"
 	@echo "... src/pit.i"
 	@echo "... src/pit.s"
