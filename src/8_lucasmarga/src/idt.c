@@ -2,19 +2,19 @@
 #include "gdt.h"
 #include "libc/stdint.h"
 
-/* Max 256 interrupt entries */
+// Max 256 interrupt entries
 static idt_entry_t idt[256];
 static idt_ptr_t idt_ptr;
 
-/* Function written in assembly */
+// Function written in assembly 
 extern void load_idt(idt_ptr_t* idt_ptr);
 
-/* Declaration for ISR handlers*/
+// Declaration for ISR handlers
 extern void isr0(void);
 extern void isr1(void);
 extern void isr2(void);
 
-/* Declarations for IRQ Handlers */
+// Declarations for IRQ Handlers 
 extern void irq0(void);
 extern void irq1(void);
 extern void irq2(void);
@@ -33,7 +33,7 @@ extern void irq14(void);
 extern void irq15(void);
 
 
-/* Setting one IDT descriptor */
+// Setting one IDT descriptor
 static void set_idt_entry(uint8_t num, uint32_t base, uint16_t selector, uint8_t flags) {
     idt[num].offset_low  = base & 0xFFFF;
     idt[num].selector    = selector;
@@ -51,13 +51,13 @@ void idt_setup(void) {
         set_idt_entry(i, 0, 0, 0);
     }
 
-    /* Three interrupt gates*/
+    // Three interrupt gates
     set_idt_entry(0, (uint32_t)isr0, 0x08, 0x8E);
     set_idt_entry(1, (uint32_t)isr1, 0x08, 0x8E);
     set_idt_entry(2, (uint32_t)isr2, 0x08, 0x8E);
 
 
-    /* Setup IRQ entries */
+    // Setup IRQ entries 
     set_idt_entry(32, (uint32_t)irq0,  0x08, 0x8E);
     set_idt_entry(33, (uint32_t)irq1,  0x08, 0x8E);
     set_idt_entry(34, (uint32_t)irq2,  0x08, 0x8E);
@@ -75,6 +75,6 @@ void idt_setup(void) {
     set_idt_entry(46, (uint32_t)irq14, 0x08, 0x8E);
     set_idt_entry(47, (uint32_t)irq15, 0x08, 0x8E);
 
-    /* Loading the IDT */
+    // Loading the IDT
     load_idt(&idt_ptr);
 }

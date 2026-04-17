@@ -32,6 +32,11 @@ void kmain(uint32_t magic, void* mb_info_addr) {
 
     __asm__ __volatile__("sti");
 
+    __asm__ __volatile__("int $0");
+    __asm__ __volatile__("int $1");
+    __asm__ __volatile__("int $2");
+
+
     while (1) {
         __asm__ __volatile__("hlt");
     }

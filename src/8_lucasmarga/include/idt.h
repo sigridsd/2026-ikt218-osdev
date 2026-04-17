@@ -1,7 +1,7 @@
 #pragma once
 #include "libc/stdint.h"
 
-/* Single IDT entry  */
+// Single IDT entry 
 typedef struct __attribute__((packed)) {
     uint16_t offset_low;
     uint16_t selector;
@@ -10,11 +10,11 @@ typedef struct __attribute__((packed)) {
     uint16_t offset_high;
 } idt_entry_t;
 
-/* Stores the IDT pointer */
+// Stores the IDT pointer 
 typedef struct __attribute__((packed)) {
     uint16_t limit;
     uint32_t base;
 } idt_ptr_t;
 
-/* Main setup function */
+// Main setup function 
 void idt_setup(void);
