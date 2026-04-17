@@ -1,4 +1,5 @@
 #include "song.h"
+#include "libc/stdio.h"
 #include "kernel_memory.h"
 
 //convers an array of notes into a song object
@@ -47,3 +48,4 @@ void play_music() {
             printf("Finished playing the song.\n");
         }
     }
+}
