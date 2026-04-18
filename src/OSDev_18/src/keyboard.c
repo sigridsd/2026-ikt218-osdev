@@ -7,6 +7,8 @@
 static uint32_t index = 0;
 static uint8_t keyboardBuffer[KEYBOARD_BUFFER_SIZE];
 
+static volatile char lastKeyPressed = 0;
+
 static const char scancodeToAscii[128] = {
     0,   27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
     '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -18,6 +20,12 @@ static const char scancodeToAscii[128] = {
     '1', '2', '3', '0', '.',
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
+
+char GetLastKeyPressed(void) {
+    char key = lastKeyPressed;
+    lastKeyPressed = 0;
+    return key;
+}
 
 void KeyboardHandler(struct Registers* registers) {
     (void) registers;
@@ -37,7 +45,7 @@ void KeyboardHandler(struct Registers* registers) {
         char ascii = scancodeToAscii[scancode];
 
         if (ascii != 0) {
-            TerminalPutChar(ascii);
+            lastKeyPressed = ascii;
         }
     }
 }

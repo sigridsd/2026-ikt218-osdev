@@ -1,16 +1,70 @@
 #include <snakeApp/snake.h>
+#include <kernel/memory.h>
+#include <kernel/pit.h>
+#include <kernel/keyboard.h>
+#include <kernel/terminal.h>
+#include <songApp/song.h>
+#include <songApp/frequencies.h>
 
-char board[BOARD_SIZE][BOARD_SIZE][3];
-struct Snake snake;
-struct Food food;
-enum CollisionType collisionType;
+struct GameState* CreateGame(void) {
+    struct GameState* game = (struct GameState*)malloc(sizeof(struct GameState));
+    if (!game) {
+        return 0;
+    }
 
-void InitializeBoard(void) {
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            board[i][j][0] = ' ';
-            board[i][j][1] = ' ';
-            board[i][j][2] = '\0';
+    game->snake = (struct Snake*)malloc(sizeof(struct Snake));
+    if (!game->snake) {
+        free(game);
+        return 0;
+    }
+
+    game->food = (struct Food*)malloc(sizeof(struct Food));
+    if (!game->food) {
+        free(game->snake);
+        free(game);
+        return 0;
+    }
+
+    game->score = 0;
+    game->rngState = GetCurrentTick();
+
+    InitializeBoard(game);
+    InitializeSnake(game->snake);
+    InitializeFood(game->food);
+
+    return game;
+}
+
+void DestroyGame(struct GameState* game) {
+    if (!game) return;
+
+    if (game->snake) {
+        free(game->snake);
+    }
+
+    if (game->food) {
+        free(game->food);
+    }
+    
+    free(game);
+}
+
+void ResetGame(struct GameState* game) {
+    if (!game) return;
+
+    InitializeBoard(game);
+    InitializeSnake(game->snake);
+    InitializeFood(game->food);
+    game->score = 0;
+    game->rngState = GetCurrentTick();
+}
+
+void InitializeBoard(struct GameState* game) {
+    for (uint32_t i = 0; i < BOARD_SIZE; i++) {
+        for (uint32_t j = 0; j < BOARD_SIZE; j++) {
+            game->board[i][j][0] = ' ';
+            game->board[i][j][1] = ' ';
+            game->board[i][j][2] = '\0';
         }
     }
 }
@@ -27,6 +81,79 @@ void InitializeFood(struct Food* food) {
     food->y = (BOARD_SIZE / 2) - 3;
 }
 
+uint32_t Random(uint32_t* rngState) {
+    *rngState = (*rngState * 1103515245) + 12345;
+    return *rngState;
+}
+
+void HandleInput(struct GameState* game, char input) {
+    switch (input) {
+        case 'w': {
+            if (game->snake->direction != DOWN) {
+                game->snake->direction = UP;
+            }
+            break;
+        }
+        case 's': {
+            if (game->snake->direction != UP) {
+                game->snake->direction = DOWN;
+            }
+            break;
+        }
+        case 'a': {
+            if (game->snake->direction != RIGHT) {
+                game->snake->direction = LEFT;
+            }
+            break;
+        }
+        case 'd': {
+            if (game->snake->direction != LEFT) {
+                game->snake->direction = RIGHT;
+            }
+            break;
+        }
+        case 'r': {
+            if (game) {
+                ResetGame(game);
+            }
+            break;
+        }
+        case 'q': {
+            TerminalWriteString("Quitting game...\n");
+            DestroyGame(game);
+        }
+        default: {
+            break;
+        }
+    }
+}
+
+void PlayFoodSound(void) {
+    PlaySound(B5);
+    SleepInterrupt(50);
+    StopSound();
+}
+
+void PlayDeathSound(void) {
+    PlaySound(G3);
+    SleepInterrupt(100);
+    StopSound();
+}
+
+void PlayWinSound(void) {
+    PlaySound(C5); 
+    SleepInterrupt(100); 
+    StopSound();
+
+    PlaySound(E5); 
+    SleepInterrupt(100); 
+    StopSound();
+
+    PlaySound(G5); 
+    SleepInterrupt(200); 
+    StopSound();
+}
+
 struct SnakeSegment MoveSnake(struct Snake* snake) {
     int x = snake->body[0].x;
     int y = snake->body[0].y;
@@ -34,7 +161,7 @@ struct SnakeSegment MoveSnake(struct Snake* snake) {
     switch (snake->direction) {
         case UP: {
             snake->body[0].y--;
-            for (int i = 1; i < snake->length; i++) {
+            for (uint32_t i = 1; i < snake->length; i++) {
                 int tempX = snake->body[i].x;
                 int tempY = snake->body[i].y;
                 snake->body[i].x = x;
@@ -46,7 +173,7 @@ struct SnakeSegment MoveSnake(struct Snake* snake) {
         }
         case DOWN: {
             snake->body[0].y++;
-            for (int i = 1; i < snake->length; i++) {
+            for (uint32_t i = 1; i < snake->length; i++) {
                 int tempX = snake->body[i].x;
                 int tempY = snake->body[i].y;
                 snake->body[i].x = x;
@@ -58,7 +185,7 @@ struct SnakeSegment MoveSnake(struct Snake* snake) {
         }
         case LEFT: {
             snake->body[0].x--;
-            for (int i = 1; i < snake->length; i++) {
+            for (uint32_t i = 1; i < snake->length; i++) {
                 int tempX = snake->body[i].x;
                 int tempY = snake->body[i].y;
                 snake->body[i].x = x;
@@ -70,7 +197,7 @@ struct SnakeSegment MoveSnake(struct Snake* snake) {
         }
         case RIGHT: {
             snake->body[0].x++;
-            for (int i = 1; i < snake->length; i++) {
+            for (uint32_t i = 1; i < snake->length; i++) {
                 int tempX = snake->body[i].x;
                 int tempY = snake->body[i].y;
                 snake->body[i].x = x;
@@ -80,34 +207,37 @@ struct SnakeSegment MoveSnake(struct Snake* snake) {
             }
             break;
         }
+        default: {
+            break;
+        }
     }
     return (struct SnakeSegment){ x, y };
 }
 
-void SpawnFood(struct Snake* snake, struct Food* food) {
+void SpawnFood(struct GameState* game) {
     int x, y;
-    int occupied;
+    uint32_t occupied;
 
-    if (snake->length == SNAKE_MAX_LENGTH) {
+    if (game->snake->length == SNAKE_MAX_LENGTH) {
         return;
     }
 
     do {
-        x = rand() % BOARD_SIZE;
-        y = rand() % BOARD_SIZE;
+        x = Random(&game->rngState) % BOARD_SIZE;
+        y = Random(&game->rngState) % BOARD_SIZE;
 
         occupied = 0;
 
-        for (int i = 0; i < snake->length; i++) {
-            if (snake->body[i].x == x && snake->body[i].y == y) {
+        for (uint32_t i = 0; i < game->snake->length; i++) {
+            if (game->snake->body[i].x == x && game->snake->body[i].y == y) {
                 occupied = 1;
                 break;
             }
         }
     } while (occupied);
 
-    food->x = x;
-    food->y = y;
+    game->food->x = x;
+    game->food->y = y;
 }
 
 void AddSegment(struct Snake* snake, int x, int y) {
@@ -124,7 +254,7 @@ enum CollisionType CheckCollision(struct Snake* snake, struct Food* food) {
     } else if (snake->body[0].x < 0 || snake->body[0].x >= BOARD_SIZE || snake->body[0].y < 0 || snake->body[0].y >= BOARD_SIZE) {
         return WALL;
     } else {
-        for (int i = 1; i < snake->length; i++) {
+        for (uint32_t i = 1; i < snake->length; i++) {
             if (snake->body[0].x == snake->body[i].x && snake->body[0].y == snake->body[i].y) {
                 return SELF;
             }
@@ -133,77 +263,95 @@ enum CollisionType CheckCollision(struct Snake* snake, struct Food* food) {
     }
 }
 
-void DrawBoard(struct Snake* snake, struct Food* food) {
-    InitializeBoard();
+void DrawBoard(struct GameState* game) {
+    TerminalClear();
+    InitializeBoard(game);
 
-    if (snake->direction == UP) {
-        board[snake->body[0].y][snake->body[0].x][0] = '^';
-        board[snake->body[0].y][snake->body[0].x][1] = '^';
-    } else if (snake->direction == DOWN) {
-        board[snake->body[0].y][snake->body[0].x][0] = 'v';
-        board[snake->body[0].y][snake->body[0].x][1] = 'v';
-    } else if (snake->direction == LEFT) {
-        board[snake->body[0].y][snake->body[0].x][0] = '<';
-        board[snake->body[0].y][snake->body[0].x][1] = '<';
-    } else if (snake->direction == RIGHT) {
-        board[snake->body[0].y][snake->body[0].x][0] = '>';
-        board[snake->body[0].y][snake->body[0].x][1] = '>';
+    if (game->snake->direction == UP) {
+        game->board[game->snake->body[0].y][game->snake->body[0].x][0] = '^';
+        game->board[game->snake->body[0].y][game->snake->body[0].x][1] = '^';
+    } else if (game->snake->direction == DOWN) {
+        game->board[game->snake->body[0].y][game->snake->body[0].x][0] = 'v';
+        game->board[game->snake->body[0].y][game->snake->body[0].x][1] = 'v';
+    } else if (game->snake->direction == LEFT) {
+        game->board[game->snake->body[0].y][game->snake->body[0].x][0] = '<';
+        game->board[game->snake->body[0].y][game->snake->body[0].x][1] = '<';
+    } else if (game->snake->direction == RIGHT) {
+        game->board[game->snake->body[0].y][game->snake->body[0].x][0] = '>';
+        game->board[game->snake->body[0].y][game->snake->body[0].x][1] = '>';
     }
 
-    for (int i = 1; i < snake->length; i++) {
-        board[snake->body[i].y][snake->body[i].x][0] = '[';
-        board[snake->body[i].y][snake->body[i].x][1] = ']';
+    for (uint32_t i = 1; i < game->snake->length; i++) {
+        game->board[game->snake->body[i].y][game->snake->body[i].x][0] = '[';
+        game->board[game->snake->body[i].y][game->snake->body[i].x][1] = ']';
     }
 
-    board[food->y][food->x][0] = '{';
-    board[food->y][food->x][1] = '}';
+    game->board[game->food->y][game->food->x][0] = '{';
+    game->board[game->food->y][game->food->x][1] = '}';
 
-    for (int i = 0; i < BOARD_SIZE + 2; i++) {
-        printf("##");
+    for (uint32_t i = 0; i < BOARD_SIZE + 2; i++) {
+        TerminalWriteString("##");
     }
-    printf("\n");
+    TerminalPutChar('\n');
 
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        printf("##");
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            printf("%s", board[i][j]);
+    for (uint32_t i = 0; i < BOARD_SIZE; i++) {
+        TerminalWriteString("##");
+        for (uint32_t j = 0; j < BOARD_SIZE; j++) {
+            TerminalWriteString(game->board[i][j]);
         }
-        printf("##\n");
+        TerminalWriteString("##\n");
     }
 
-    for (int i = 0; i < BOARD_SIZE + 2; i++) {
-        printf("##");
+    for (uint32_t i = 0; i < BOARD_SIZE + 2; i++) {
+        TerminalWriteString("##");
     }
-    printf("\n");
+    TerminalPutChar('\n');
+
+    TerminalWriteString("Score: ");
+    TerminalWriteUInt(game->score);
+    TerminalPutChar('\n');
 }
 
 void PlayGame(void) {
-    InitializeSnake(&snake);
-    InitializeFood(&food);
+    struct GameState* game = CreateGame();
+    if (!game) {
+        TerminalWriteString("Failed to create game.\n");
+        return;
+    }
+
+    char input = 0;
+    struct SnakeSegment tail;
+    enum CollisionType collisionType = NONE;
 
     while(1) {
-        if (snake.length == SNAKE_MAX_LENGTH) {
+        if (game->snake->length == SNAKE_MAX_LENGTH) {
             break;
         }
+        
+        input = GetLastKeyPressed();
+        HandleInput(game, input);
+        if (input == 'q') return;
+        tail = MoveSnake(game->snake);
 
-        struct SnakeSegment tail = MoveSnake(&snake);
-
-        collisionType = CheckCollision(&snake, &food);
+        collisionType = CheckCollision(game->snake, game->food);
         if (collisionType == FOOD) {
-            AddSegment(&snake, tail.x, tail.y);
-            SpawnFood(&snake, &food);
-        } else if (collisionType == WALL) {
-            InitializeSnake(&snake);
-            InitializeFood(&food);
-        } else if (collisionType == SELF) {
-            InitializeSnake(&snake);
-            InitializeFood(&food);
+            game->score++;
+            PlayFoodSound();
+            AddSegment(game->snake, tail.x, tail.y);
+            SpawnFood(game);
+        } else if (collisionType == WALL || collisionType == SELF) {
+            PlayDeathSound();
+            ResetGame(game);
         }
 
         collisionType = NONE;
 
-        DrawBoard(&snake, &food);
+        DrawBoard(game);
+
+        SleepInterrupt(GAME_SPEED_MS);
     }
 
-    printf("You win!\n");
+    TerminalWriteString("You win!\n");
+    PlayWinSound();
+    DestroyGame(game);
 }

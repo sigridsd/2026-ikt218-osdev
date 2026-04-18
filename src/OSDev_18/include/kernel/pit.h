@@ -17,6 +17,8 @@
 #define DIVIDER (PIT_BASE_FREQ / TARGET_FREQ)
 #define TICKS_PER_MS (TARGET_FREQ / TARGET_FREQ) // = 1, needed for converting ms into ticks
 
+uint32_t GetCurrentTick(void);
+
 void PitInitialize();
 void SleepInterrupt(uint32_t ticks);
 void SleepBusy(uint32_t milliseconds);

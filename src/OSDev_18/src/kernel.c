@@ -8,6 +8,7 @@
 #include <kernel/pit.h>
 #include <songApp/song.h>
 #include <songApp/frequencies.h>
+#include <snakeApp/snake.h>
 
 extern uint32_t end;
 
@@ -30,11 +31,9 @@ void PlayMusic(void) {
         return;
     }
 
-    while(1) {
-        for(uint32_t i = 0; i < songCount; i++) {
-            player->play_song(&songs[i]);
-            SleepInterrupt(1000);
-        }
+    for(uint32_t i = 0; i < songCount; i++) {
+        player->play_song(&songs[i]);
+        SleepInterrupt(1000);
     }
 }
 
@@ -50,37 +49,23 @@ void main(void) {
     InitPaging();
     PrintMemoryLayout();
 
-    /*
+    while (1) {
+        TerminalClear();
+        TerminalWriteString("Enter application number (0 for music, 1 for snake): ");
+        char input = TerminalGetChar();
 
-    void* memory1 = malloc(48261);
-    void* memory2 = malloc(27261);
-    void* memory3 = malloc(12617);
-
-    TerminalWriteString("memory1 = ");
-    TerminalWriteHex((uint32_t)memory1);
-    TerminalWriteString("\n");
-
-    TerminalWriteString("memory2 = ");
-    TerminalWriteHex((uint32_t)memory2);
-    TerminalWriteString("\n");
-
-    TerminalWriteString("memory3 = ");
-    TerminalWriteHex((uint32_t)memory3);
-    TerminalWriteString("\n");
-
-    free(memory2);
-
-    void* memory4 = malloc(1000);
-
-    TerminalWriteString("memory4 = ");
-    TerminalWriteHex((uint32_t)memory4);
-    TerminalWriteString("\n");
-
-    SleepTest();
-
-    */
-
-    PlayMusic();
+        switch (input) {
+            case '0':
+                PlayMusic();
+                break;
+            case '1':
+                PlayGame();
+                break;
+            default:
+                TerminalWriteString("Invalid application number.\n");
+                break;
+        }
+    }
 
     for (;;) {
         __asm__ volatile("hlt");

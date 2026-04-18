@@ -1,6 +1,8 @@
 #include <kernel/gdt.h>
 #include <kernel/terminal.h>
 #include <kernel/io.h>
+#include <kernel/keyboard.h>
+#include <kernel/pit.h>
 
 const size_t VGA_HEIGHT = 25;
 const size_t VGA_WIDTH = 80;
@@ -19,6 +21,18 @@ uint8_t VgaEntryColour(enum vga_colour fg, enum vga_colour bg) {
 // Builds the full cell
 uint16_t VgaEntry(unsigned char uc, uint8_t color) {
     return (uint16_t) uc | (uint16_t) color << 8;
+}
+
+void TerminalClear(void) {
+    for (size_t y = 0; y < VGA_HEIGHT; y++) {
+        for (size_t x = 0; x < VGA_WIDTH; x++) {
+            TerminalEntryAt(' ', terminal_colour, x, y);
+        }
+    }
+
+    terminal_row = 0;
+    terminal_column = 0;
+    TerminalUpdateCursor();
 }
 
 void TerminalEntryAt(char c, uint8_t colour, size_t x, size_t y){
@@ -124,5 +138,17 @@ void TerminalWriteHex(uint32_t num) {
     for (int i = 28; i >= 0; i -= 4) {
         uint8_t digit = (num >> i) & 0xF;
         TerminalPutChar(hexChars[digit]);
+    }
+}
+
+char TerminalGetChar(void) {
+    while (1) {
+        char key = GetLastKeyPressed();
+
+        if (key != 0) {
+            return key;
+        }
+
+        SleepInterrupt(100);
     }
 }

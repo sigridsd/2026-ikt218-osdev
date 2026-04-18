@@ -5,7 +5,7 @@
 
 static volatile uint32_t pit_ticks = 0; // Encasulated to pit.c to avoid accidental overwrite
 
-static uint32_t GetCurrentTick(void){
+uint32_t GetCurrentTick(void){
     return pit_ticks;
 }
 

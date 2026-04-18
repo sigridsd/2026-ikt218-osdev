@@ -26,6 +26,7 @@ enum vga_colour{
 uint8_t VgaEntryColour(enum vga_colour fg, enum vga_colour bg);
 uint16_t VgaEntry(unsigned char uc, uint8_t color);
 
+void TerminalClear(void);
 void TerminalEntryAt(char c, uint8_t colour, size_t x, size_t y);
 void TerminalInitialize(void);
 void TerminalSetColour(uint8_t colour);
@@ -35,5 +36,6 @@ void TerminalWrite(const char* data, size_t size);
 void TerminalWriteString(const char* data);
 void TerminalWriteUInt(uint32_t num);
 void TerminalWriteHex(uint32_t memory);
+char TerminalGetChar(void);
 
 #endif
