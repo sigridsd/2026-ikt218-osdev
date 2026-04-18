@@ -1,17 +1,16 @@
 #include "../include/gdt.h"
 
-// our GDT table with 3 slots
+// Telling the compoiler to reserve meemory to hold 3 gdt struvctures.
+// and also tell the cpu whre the gdt is, and how big it is.
 static gdt_entry_t gdt_segments[GDT_SIZE];
-
-// this tells the CPU where our GDT is in memory
 static gdt_descriptor_t gdt_descriptor;
+
 
 // this is defined in gdt.asm, it loads the GDT into the CPU
 extern void gdt_flush(uint32_t);
 
 // fills in one slot in the GDT table
 // the base and limit have to be split across multiple fields
-// which is a bit annoying but its just how old CPUs work
 static void encode_segment(int slot, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {
     // split the base address into 3 parts
     gdt_segments[slot].base_low    = (base & 0xFFFF);
@@ -28,6 +27,7 @@ static void encode_segment(int slot, uint32_t base, uint32_t limit, uint8_t acce
     // set the access byte
     gdt_segments[slot].access = access;
 }
+
 
 // sets up the GDT with 3 entries and loads it into the CPU
 void gdt_init(void) {
