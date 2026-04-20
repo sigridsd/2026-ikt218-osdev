@@ -5,7 +5,9 @@
 #include "song/song.h"
 #include "pit.h"
 #include "vga_mode13.h"
+#include "mouse.h"
 
+int frame = 0;
 static uint32_t parse_uint(const char* str) {
     uint32_t result = 0;
     while (*str >= '0' && *str <= '9') {
@@ -50,7 +52,7 @@ Song battlefield_1942 = {
 
 //possible to add more commands for help here
 void command_help(){
-    terminal_write("\nCommands avalible:\nclear\nhello\nmemory\ntriangle\nsleep_b <value>\nsleep_i <value>\nsong <song number>\nhelp\n");
+    terminal_write("\nCommands avalible:\nclear\nhello\nmemory\ntriangle\nsleep_b <value>\nsleep_i <value>\nsong <song number>\ndraw (right click to leave)\nhelp\n");
 }
 
 void command_triangle() {
@@ -142,17 +144,18 @@ void command_song(const char* args) {
 void command_draw() {
     terminal_save_screen();
     vga_enter_mode13();
-    vga_clear(0);                        // black background
+    vga_clear(0); 
+    mouse_set_drawing_mode(1);  
+    while (!mouse_right_clicked()) {
+        __asm__("hlt");     // sleep until next interrupt
 
-    // Draw a red rectangle (color index 4 = red in default palette)
-    for (int y = 50; y < 100; y++)
-        for (int x = 50; x < 150; x++)
-            vga_put_pixel(x, y, 4);
-
-    sleep_interrupt(3000);                    // admire it for 3 seconds
-
+        // Draw a single pixel in the corner that changes color every 1000 iterations
+        // add an escape key check here if you want a way out
+    }
+    mouse_set_drawing_mode(0);
     vga_exit_mode13();
     terminal_restore_screen();
+    terminal_write("\n");
 }
 
 void shell_execute_command(char* input) {

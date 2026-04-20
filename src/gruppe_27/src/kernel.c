@@ -3,6 +3,7 @@
 #include "idt.h"
 #include "memory.h"    // init_kernel_memory, malloc, free, init_paging, print_memory_layout
 #include "pit.h"
+#include "mouse.h"
 
 // Linker symbol — first byte past the kernel image.
 extern uint32_t end;
@@ -39,6 +40,9 @@ void main(uint32_t mb2_magic, uint32_t mb2_info) {
  
     // 6. IRQ handlers
     irq_install_handler(1, keyboard_handler);
+
+    //intalls mouse
+    mouse_install();
  
     // 7. Enable interrupts
     __asm__ __volatile__("sti");

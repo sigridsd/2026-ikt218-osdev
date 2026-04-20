@@ -13,4 +13,7 @@ static inline uint8_t inb(uint16_t port) {
     asm volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
     return ret;
 }
+static int abs(int n) {
+    return (n < 0) ? -n : n;
+}
 #endif

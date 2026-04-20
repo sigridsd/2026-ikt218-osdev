@@ -3,7 +3,8 @@
 #include "memory.h"
 #include "shell.h"
 #include "common.h"
-#
+#include "mouse.h"
+#include "vga_mode13.h"
 
 
 static int shift_pressed = 0;
