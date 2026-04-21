@@ -435,6 +435,30 @@ src/pic.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/pic.c.s
 .PHONY : src/pic.c.s
 
+src/pit.o: src/pit.c.o
+.PHONY : src/pit.o
+
+# target to build an object file
+src/pit.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/pit.c.o
+.PHONY : src/pit.c.o
+
+src/pit.i: src/pit.c.i
+.PHONY : src/pit.i
+
+# target to preprocess a source file
+src/pit.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/pit.c.i
+.PHONY : src/pit.c.i
+
+src/pit.s: src/pit.c.s
+.PHONY : src/pit.s
+
+# target to generate assembly for a file
+src/pit.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/pit.c.s
+.PHONY : src/pit.c.s
+
 src/terminal.o: src/terminal.c.o
 .PHONY : src/terminal.o
 
@@ -505,6 +529,9 @@ help:
 	@echo "... src/pic.o"
 	@echo "... src/pic.i"
 	@echo "... src/pic.s"
+	@echo "... src/pit.o"
+	@echo "... src/pit.i"
+	@echo "... src/pit.s"
 	@echo "... src/terminal.o"
 	@echo "... src/terminal.i"
 	@echo "... src/terminal.s"

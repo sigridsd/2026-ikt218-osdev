@@ -1,5 +1,4 @@
 BITS 32
-
 EXTERN irq_handler
 
 GLOBAL irq0
@@ -19,98 +18,30 @@ GLOBAL irq13
 GLOBAL irq14
 GLOBAL irq15
 
-irq0:
-    push dword 0
-    call irq_handler
-    add esp, 4
-    iret
 
-irq1:
-    push dword 1
-    call irq_handler
-    add esp, 4
-    iret
+%macro IRQ 1
+irq%1:
+    pushad              
+    push dword %1       
+    call irq_handler    
+    add esp, 4          
+    popad               
+    iret                
+%endmacro
 
-irq2:
-    push dword 2
-    call irq_handler
-    add esp, 4
-    iret
-
-irq3:
-    push dword 3
-    call irq_handler
-    add esp, 4
-    iret
-
-irq4:
-    push dword 4
-    call irq_handler
-    add esp, 4
-    iret
-
-irq5:
-    push dword 5
-    call irq_handler
-    add esp, 4
-    iret
-
-irq6:
-    push dword 6
-    call irq_handler
-    add esp, 4
-    iret
-
-irq7:
-    push dword 7
-    call irq_handler
-    add esp, 4
-    iret
-
-irq8:
-    push dword 8
-    call irq_handler
-    add esp, 4
-    iret
-
-irq9:
-    push dword 9
-    call irq_handler
-    add esp, 4
-    iret
-
-irq10:
-    push dword 10
-    call irq_handler
-    add esp, 4
-    iret
-
-irq11:
-    push dword 11
-    call irq_handler
-    add esp, 4
-    iret
-
-irq12:
-    push dword 12
-    call irq_handler
-    add esp, 4
-    iret
-
-irq13:
-    push dword 13
-    call irq_handler
-    add esp, 4
-    iret
-
-irq14:
-    push dword 14
-    call irq_handler
-    add esp, 4
-    iret
-
-irq15:
-    push dword 15
-    call irq_handler
-    add esp, 4
-    iret
+IRQ 0
+IRQ 1
+IRQ 2
+IRQ 3
+IRQ 4
+IRQ 5
+IRQ 6
+IRQ 7
+IRQ 8
+IRQ 9
+IRQ 10
+IRQ 11
+IRQ 12
+IRQ 13
+IRQ 14
+IRQ 15

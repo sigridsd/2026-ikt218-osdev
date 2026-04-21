@@ -1,16 +1,20 @@
 #include "terminal.h"
 #include "pic.h"
 #include "keyboard.h"
+#include "pit.h"          
 #include "libc/stdint.h"
 
 void irq_handler(uint32_t irq_number) {
     static int timer_printed = 0;
 
     if (irq_number == 0) {
+        pit_irq_handler();
+
         if (!timer_printed) {
             terminal_print_string("IRQ 0 triggered\n");
             timer_printed = 1;
         }
+        return;
     } else if (irq_number == 1) {
         keyboard_handle_input();
     } else if (irq_number == 2) {

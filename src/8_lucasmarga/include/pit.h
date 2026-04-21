@@ -1,8 +1,8 @@
 #ifndef PIT_H
 #define PIT_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "libc/stdint.h"
+#include "libc/stdbool.h"
 
 // PIT macros
 #define PIT_CMD_PORT 0x43
@@ -28,5 +28,7 @@
 void init_pit();
 void sleep_interrupt(uint32_t milliseconds);
 void sleep_busy(uint32_t milliseconds);
+void pit_irq_handler();
+uint32_t get_current_tick();
 #endif
 
