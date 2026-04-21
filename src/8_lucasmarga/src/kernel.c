@@ -53,18 +53,18 @@ void kmain(uint32_t magic, void* mb_info_addr) {
     while (1) {
         terminal_print_string("[");
         print_int(counter);
-        terminal_print_string("]: Sleeping with busy-waiting (HIGH CPU).\n");
+        terminal_print_string("]: Busy-wait sleep, high CPU usage.\n");
         sleep_busy(1000);
         terminal_print_string("[");
         print_int(counter++);
-        terminal_print_string("]: Slept using busy-waiting.\n");
+        terminal_print_string("]: Slept with busy-wait.\n");
 
         terminal_print_string("[");
         print_int(counter);
-        terminal_print_string("]: Sleeping with interrupts (LOW CPU).\n");
+        terminal_print_string("]: Sleeping using interrupts, low CPU usage.\n");
         sleep_interrupt(1000);
         terminal_print_string("[");
         print_int(counter++);
-        terminal_print_string("]: Slept using interrupts.\n");
+        terminal_print_string("]: Finished sleeping with interrutps.\n");
     }
 }
