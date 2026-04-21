@@ -69,6 +69,7 @@ add_executable(uiaos-kernel
 	src/kernel_memory.c
 	src/pit.c
 	src/stdio.c
+	src/piano.c
 	../isr/isr.c
 	../isr/isr.asm
 	../irq/irq.c

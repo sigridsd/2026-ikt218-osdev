@@ -84,7 +84,7 @@ int main(uint32_t myStruct, uint32_t magic, struct multiboot_info* mb_info_addr)
     sleep_interrupt(SCREEN_PAUSE_MS);
     wait_for_user_next_screen();
 
-    printf("Hello World!\n");
+    print_string("Hello World", 0x0F);
     sleep_interrupt(SCREEN_PAUSE_MS);
     wait_for_user_next_screen();
 
@@ -124,7 +124,14 @@ int main(uint32_t myStruct, uint32_t magic, struct multiboot_info* mb_info_addr)
     wait_for_user_next_screen();
 
     printf("PIT timing test complete. System halted for inspection.\n");
+    
+    printf("\nPiano mode! Press 1-8 to play notes.\n");
+    extern void piano_play(void); // piano
+    piano_play(); // piano
+
     halt_forever();
+
+
 
     return 0;
 }
