@@ -9,7 +9,6 @@
 #include "paging.h"
 #include "pit.h"
 #include "songs/song.h"
-//#include "SongPlayer.h"
 
 // This symbol is exported by arch/i386/linker.ld
 extern uint32_t end;
@@ -226,8 +225,6 @@ void play_music() {
         }
     }
 }
-
-
 
 
 
