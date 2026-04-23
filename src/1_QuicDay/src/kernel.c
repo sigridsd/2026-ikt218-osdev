@@ -62,100 +62,119 @@ typedef struct{
 
 
 
-int main(uint32_t myStruct, uint32_t magic, struct multiboot_info* mb_info_addr) {
 
-    MyStruct* myStructPtr = (MyStruct*)myStruct; 
-    
-    int noop = 0; 
-    int res = compute(1,2); 
+// assignment 2
+void assignment_2() {
+    initGdt();
+    print_string("Hello World", 0x0F);
+}
 
-    (void)magic;
-    (void)mb_info_addr;
-    (void)myStructPtr;
-    (void)noop;
-    (void)res;
+// assignment 3 (usikker på om jeg har fått denne riktig)
+void assignment_3() {
+    wait_for_user_next_screen();
+    asm volatile("int $0x3");
+    wait_for_user_next_screen();
+    asm volatile("int $0x4");
+    wait_for_user_next_screen();
+    asm volatile("int $0x0"); 
+    wait_for_user_next_screen();
+}
 
-    initGdt(); // Initialize Global Descriptor Table
-    isr_initialize();
-    irq_initialize();
-
+// assignment 4
+void assignment_4() {
     init_kernel_memory(&end);
     init_paging();
-    init_pit();
-
-    asm volatile("sti");
-
     print_memory_layout();
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    wait_for_user_next_screen();
-
-    print_string("Hello World", 0x0F);
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    wait_for_user_next_screen();
-
+    init_pit();
     void* some_memory = malloc(12345);
     void* memory2 = malloc(54321);
     void* memory3 = malloc(13331);
-
     printf("malloc #1: %p\n", some_memory);
     printf("malloc #2: %p\n", memory2);
     printf("malloc #3: %p\n", memory3);
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    wait_for_user_next_screen();
+    free(some_memory);
+    free(memory2);
+    free(memory3);
+    // Ingen annen opprydding nødvendig
+}
 
-    int cpp_status = kernel_main();
-    if (cpp_status != 0) {
-        printf("kernel_main failed: %d\n", cpp_status);
-        halt_forever();
-    }
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    wait_for_user_next_screen();
-
-    uint32_t counter = 0;
-    uint32_t start_tick_busy = get_current_tick();
-    printf("[%u]: Sleeping with busy-waiting (HIGH CPU).\n", counter);
-    sleep_busy(SCREEN_PAUSE_MS);
-    uint32_t elapsed_busy = get_current_tick() - start_tick_busy;
-    printf("[%u]: Slept using busy-waiting. ticks=%u\n", counter++, elapsed_busy);
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    wait_for_user_next_screen();
-
-    uint32_t start_tick_interrupt = get_current_tick();
-    printf("[%u]: Sleeping with interrupts (LOW CPU).\n", counter);
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    uint32_t elapsed_interrupt = get_current_tick() - start_tick_interrupt;
-    printf("[%u]: Slept using interrupts. ticks=%u\n", counter++, elapsed_interrupt);
-    sleep_interrupt(SCREEN_PAUSE_MS);
-    wait_for_user_next_screen();
-
-    printf("PIT timing test complete. Playing sound test....\n");
-
-    printf("Enabling speaker\n");
-    enable_speaker();
-
-    printf("Playing note A6 for 1000 ms...\n");
-    play_sound(A6);
-    sleep_interrupt(1000);
-
+// assignment 5
+void assignment_5() {
     printf("Playing music_1...\n");
-
     Song* song = malloc(sizeof(Song));
     song->notes = music_1;
     song->length = sizeof(music_1) / sizeof(Note);
     play_song(song);
+    free(song);
+}
 
-    printf("Disabling speaker\n");
-    disable_speaker();
+void userMenu() {
+    int choice = 0;
 
-    // Start piano (interaktivt)
-    piano_play_sound_keys();
 
-    halt_forever();
+    printf("   ___       _    ___               ___  ___ \n");
+    printf("  / _ \\ _  _(_)__|   \\ __ _ _  _   / _ \\/ __|\n");
+    printf(" | (_) | || | / _| |) / _` | || | | (_) \\__ \\\n");
+    printf("  \\__\\_\\\\_,_|_\\__|___/\\__,_|\\_, |  \\___/|___/\n");
+    printf("              --QuicDay OS  |__/              \n");
+    printf("\n");
+    printf("\n");
+    printf("Select an option:\n");
+    printf("1. Booting and Printing\n");
+    printf("2. Interrupts\n");
+    printf("3. Memory and PIT\n");    
+    printf("4. Music Player\n");
+    printf("5. Piano\n");
+    printf("6. Exit\n");
 
-    //Free memory before exiting
-    free(some_memory);
-    free(memory2);
-    free(memory3);
+    while (1) {
+        if (inb(0x64) & 0x01) {
+            uint8_t scancode = inb(0x60);
+            if (scancode >= 0x02 && scancode <= 0x07) { // 1 til 6
+                choice = scancode - 0x01; // 1 til 6
+                break;
+            }
+        }
+    }
 
+    // needs return functionality
+    switch (choice) {
+        case 1:
+            assignment_2();
+            break;
+        case 2:
+            assignment_3();
+            break;
+        case 3:
+            assignment_4();
+            break;
+        case 4:
+            assignment_5();
+            break;
+        case 5:
+            printf("     QuicDay Piano!     \n");
+            printf("Play by pressing 1-8 on the keypad\n\n");
+            piano_play_sound_keys();
+            break;
+        case 6:
+            // Exit message without functionality..
+            printf("byeee!\n");
+            halt_forever();
+            break;
+    }
+}
+
+int main(uint32_t myStruct, uint32_t magic, struct multiboot_info* mb_info_addr) {
+   
+    initGdt();
+    isr_initialize();
+    irq_initialize();
+    init_kernel_memory(&end);
+    init_paging();
+    init_pit();
+    asm volatile("sti");
+   
+    userMenu();
     return 0;
 }
+
