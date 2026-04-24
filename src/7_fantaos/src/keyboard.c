@@ -65,6 +65,13 @@ void keyboard_poll(void) {
     }
 }
 
+char keyboard_getchar(void) {
+    if (buf_tail == buf_head)
+        return 0;
+    uint8_t scancode = scancode_buf[buf_tail++];
+    return scancode_table[scancode];
+}
+
 void keyboard_init(void) {
     irq_install_handler(1, keyboard_handler);
     pic_unmask_irq(1);
