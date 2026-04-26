@@ -7,6 +7,7 @@
 #include <memory.h>
 #include <pit.h>
 #include "music_player/song.h"
+#include "snake/snake.h"
 
 extern uint32_t end; // Defined in arch/i386/linker.ld, marks where kernel image ends.
 
@@ -27,7 +28,7 @@ static void play_music(void) {
     }
 
     free(player);
-    printf("Player stopped. Press SPACE to play again.\n");
+    printf("Player stopped.  SPACE: play again   G: snake\n");
 }
 
 void main(uint32_t magic, void *mbi) {
@@ -66,7 +67,13 @@ void main(uint32_t magic, void *mbi) {
 
     for (;;) {
         asm volatile("sti; hlt");
-        if (keyboard_getchar() == ' ')
-            play_music();
+        char c = keyboard_getchar();
+        if (c == ' ') play_music();
+        if (c == 'g') {
+            snake_run();
+            // snake_run calls terminal_init() before returning, leaving the
+            // screen blank — reprint a short prompt so the user knows what to do.
+            printf("Fanta OS\n\nSPACE: Play music   G: Snake\n");
+        }
     }
 }

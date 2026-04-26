@@ -65,6 +65,10 @@ void terminal_putchar(char c) {
     }
 }
 
+void terminal_set_cell(int row, int col, char c, uint8_t colour) {
+    VGA_BUFFER[row * VGA_WIDTH + col] = (uint16_t)((colour << 8) | (uint8_t)c);
+}
+
 void terminal_write(const char *str) {
     while (*str) {
         terminal_putchar(*str++);
