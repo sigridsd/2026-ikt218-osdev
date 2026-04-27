@@ -11,6 +11,8 @@ static uint8_t VGA_COLOR = 0x0F; // White on black
 static size_t terminal_row = 0; // Current row in the terminal
 static size_t terminal_column = 0;  // Current column in the terminal
 
+static void terminal_scroll(void);
+
 static inline uint16_t vga_entry(unsigned char c, uint8_t color) {  // Combine character and color into a single 16-bit value
     return (uint16_t) c | (uint16_t) color << 8;    // Character is in the lower byte, color is in the upper byte
 }
@@ -23,6 +25,15 @@ static void terminal_putchar(char c) {  // Write a single character to the termi
         if (terminal_row >= VGA_HEIGHT) {
             terminal_scroll();  // Scroll the terminal if we've reached the bottom
         }
+        return;
+    }
+
+    if (c == '\b') {    // Handle backspace: move back one character and clear it
+        if (terminal_column > 0) {
+            terminal_column--;
+        }
+
+        VGA_BUFFER[terminal_row * VGA_WIDTH + terminal_column] = vga_entry(' ', VGA_COLOR);
         return;
     }
 

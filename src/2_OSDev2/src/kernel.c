@@ -12,6 +12,7 @@
 #include "pit.h"
 #include "cpp_memory_demo.h"
 #include "song/song.h"
+#include "shell.h"
 
 extern uint32_t end; // Defined in the linker script, marks the end of the kernel
 
@@ -84,6 +85,9 @@ void main(void) {
     }
     terminal_write("Interrupt sleep test done.\n");
 
+    shell_init();
+
+    /*
     Song demo_song = get_demo_song();
     SongPlayer* player = create_song_player();
     if (player != NULL) {
@@ -92,7 +96,7 @@ void main(void) {
     } else {
         terminal_write("Failed to create song player.\n");
     }
-    
+    */
     terminal_write("Kernel initializaiton complete.\n");
     terminal_write("Type on the keyboard to see output:\n");
 
