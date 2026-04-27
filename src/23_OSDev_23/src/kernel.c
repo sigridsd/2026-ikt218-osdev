@@ -9,6 +9,7 @@
 #include "paging.h"
 #include "pit.h"
 #include "songs/song.h"
+#include "random.h"
 
 // This symbol is exported by arch/i386/linker.ld
 extern uint32_t end;
@@ -255,9 +256,9 @@ void show_menu(void) {
     terminal_writestring("  |      UiAOS Main Menu          |\n");
     terminal_writestring("  +===============================+  What do you \n");
     terminal_writestring("  | 1. Play Music                 |  want to do? \n");
-    terminal_writestring("  |                               |      ___\n");
-    terminal_writestring("  |                               |    (o v o)\n");
-    terminal_writestring("  | 4. Memory Viewer              |      /|\\\n");
+    terminal_writestring("  | 2. PIT Sleep Demo             |      ___\n");
+    terminal_writestring("  | 3. Matrix Rain                |    (o v o)\n");
+    terminal_writestring("  |                               |      /|\\\n");
     terminal_writestring("  +===============================+      / \\\n");
     terminal_writestring("\n  Press a key to select...\n");
 }
@@ -275,6 +276,50 @@ void interrupt_test(counter){
                 if (quit) break;
                 printf("[%d]: Slept using interrupts.\n", counter++);
             }
+}
+
+
+/*-------------- matrix rain ---------------*/
+
+#define ROW_DELAY 40
+
+void matrix_rain(void) {
+    char chars[] = {'0','1','2','3','4','5','6','7','8','9'};
+    int total_chars = sizeof(chars);
+    int columns_row[VGA_WIDTH];
+    int columns_active[VGA_WIDTH];
+
+    for (int i = 0; i < VGA_WIDTH; i++) {
+        columns_row[i] = -1;
+        columns_active[i] = 0;
+    }
+
+    while (!quit) {
+        for (int i = 0; i < VGA_WIDTH; i++) {
+            if (columns_row[i] == -1) {
+                columns_row[i] = rand_range(0, VGA_HEIGHT);
+                columns_active[i] = rand_range(0, 1);
+            }
+        }
+        for (int i = 0; i < VGA_WIDTH; i++) {
+            if (columns_active[i] == 1) {
+                char c = chars[rand_range(0, total_chars - 1)];
+                terminal_putentryat(c, 0x0A, i, columns_row[i]);
+            } else {
+                terminal_putentryat(' ', 0x00, i, columns_row[i]);
+            }
+            columns_row[i]++;
+            if (columns_row[i] >= VGA_HEIGHT)
+                columns_row[i] = -1;
+            if (rand_range(0, 1000) == 0)
+                columns_active[i] = (columns_active[i] == 0) ? 1 : 0;
+        }
+        sleep_interrupt(ROW_DELAY);
+    }
+
+    for (int y = 0; y < VGA_HEIGHT; y++)
+        for (int x = 0; x < VGA_WIDTH; x++)
+            terminal_putentryat(' ', 0x00, x, y);
 }
 
 void main(){
@@ -353,7 +398,6 @@ void main(){
                     char answer = keyboard_getchar();
                     printf("\n\n");
                     if(answer == 'u' || answer == 'U'){
-                        char answer = keyboard_getchar();
                         show_menu();
                     } 
                 } 
@@ -368,6 +412,11 @@ void main(){
         else if (answer == '2'){
             quit = 0;
             interrupt_test(counter);
+            printf("\n");
+        }
+        else if (answer == '3'){
+            quit = 0;
+            matrix_rain();
             printf("\n");
         }
     }
