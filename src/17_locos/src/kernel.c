@@ -1,25 +1,40 @@
 /*
 Name: kernel.c
 Project: LocOS
-Description: This file contains the main entry point for the LocOS kernel. 
-             This is a school project, learning about operating system development.
+Description: Main kernel entry file. It starts the system and runs simple tests.
+             This is a school project about operating system development.
 */
 
-#include <libc/stdint.h> //includes integer types like uint32_t
-#include "gdt.h" //Includes a header file for GDT (Global Descriptor Table) initialization
-#include "terminal.h" // Includes a header file for terminal output functions like terminal_init, terminal_write.
+#include "gdt.h"       // GDT setup.
+#include "idt.h"       // IDT setup.
+#include "terminal.h"  // Screen output.
 
-void kmain(void) { //Kernel entry function kmain, this is where the kernel starts running after bootloader handoff
+void kmain(void) {      // Main kernel start function.
+    gdt_init();         // Load the GDT first.
+    terminal_init();    // Turn on text output.
+    idt_init();         // Load the IDT and IRQ setup.
 
-    terminal_init();  // Calls a function from terminal.c to initialize terminal subsystem so text output works.
-    terminal_write("LocOS v0.1\n"); // Calls the terminal_write function to print directly to the memory address to get output directly on screen
-    terminal_write("Starting kernel...\n"); 
-    terminal_write("Loading GDT...\n");
-    gdt_init(); // Calls a function from gdt.c to load the GDT, which is needed for correct segmentation in x86
-    terminal_write("GDT loaded successfully.\n");
-    terminal_write("\n Hello World! (write)\n"); // Hello World print with terminal_write
-    terminal_printf("\n Hello World! (printf)\n"); //Hello World print with printf
-    for (;;) { //Starts an infinite loop so the kernel never returns
-        __asm__ volatile ("hlt");  // Cpu halt instruction reducing CPU usage waiting for next interrupt
+    terminal_printf("Hello World!\n");                 // Print a simple line.
+    terminal_printf("LocOS\n");                        // Print the OS name.
+    terminal_write("\n Hello World! (write)\n");      // Test terminal_write.
+    terminal_printf("\n Hello World! (printf)\n");    // Test terminal_printf.
+    terminal_printf("IDT loaded. Triggering test interrupts...\n"); // Start interrupt tests.
+
+    __asm__ volatile ("int $0x0");   // Test interrupt 0.
+    __asm__ volatile ("int $0x1");   // Test interrupt 1.
+    __asm__ volatile ("int $0x2");   // Test interrupt 2.
+    __asm__ volatile ("int $0x30");  // Test software interrupt 0x30.
+
+    terminal_printf("Triggering test IRQ vector...\n"); // Start IRQ test.
+    __asm__ volatile ("int $0x20");                    // Test IRQ 0 vector.
+
+    terminal_printf("Keyboard logger ready. Type on keyboard:\n"); // Keyboard test.
+    __asm__ volatile ("sti");                                   // Enable interrupts.
+
+    for (;;) {                 // Idle loop.
+        __asm__ volatile ("hlt"); // Sleep until next interrupt.
     }
 }
+
+
+   

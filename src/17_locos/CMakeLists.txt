@@ -63,6 +63,10 @@ add_executable(locos-kernel
 	src/gdt.asm
 	src/gdt.c
 	src/terminal.c
+	src/idt.asm
+	src/idt.c
+	src/isr.c
+	src/irq.c
 )
 
 # Include directories for the kernel target
