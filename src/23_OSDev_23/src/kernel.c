@@ -254,19 +254,19 @@ void play_music() {
         song.notes = music_1;
         song.length = sizeof(music_1) / sizeof(Note);
         quit = 0;
-        printf("Playing Super Mario theam song...\n");
+        printf("Playing Super Mario them song...\n");
     } else if (choice == '2') {
         printf("\n");
         song.notes = starwars_theme;
         song.length = sizeof(starwars_theme) / sizeof(Note);
         quit = 0;
-        printf("Playing StarWars theam song...\n");
+        printf("Playing Star Wars them song...\n");
     } else if (choice == '3') {
         printf("\n");
         song.notes = battlefield_1942_theme;
         song.length = sizeof(battlefield_1942_theme) / sizeof(Note);
         quit = 0;
-        printf("Playing battlefield team song...\n");
+        printf("Playing battlefield them song...\n");
     } else if (choice =='4'){
         return;
     } else if (choice =='q'){
