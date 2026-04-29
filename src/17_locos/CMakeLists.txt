@@ -67,6 +67,10 @@ add_executable(locos-kernel
 	src/idt.c
 	src/isr.c
 	src/irq.c
+	src/paging.c
+	src/pit.c
+	src/cxx_mem.cpp
+	src/memory.c
 )
 
 # Include directories for the kernel target
