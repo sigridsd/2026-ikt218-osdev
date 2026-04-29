@@ -236,24 +236,33 @@ void PlaySongFromLibrary(struct SongLibrary* songLibrary) {
         return;
     }
 
-    uint32_t songChoice;
+    uint32_t songChoice = 0;
+    uint32_t songIndex = 0;
 
     do {
         TerminalWriteString("You have ");
         TerminalWriteUInt(songLibrary->songCount);
         TerminalWriteString(" songs created.\n");
-        TerminalWriteString("Write the song number you want to listen to: ");
+        TerminalWriteString("Write a song number from 1 to ");
+        TerminalWriteUInt(songLibrary->songCount);
+        TerminalWriteString(": ");
 
         if (!TerminalGetUInt(&songChoice)) {
             TerminalWriteString("Error... Number is not correctly written.\n");
             continue;
         }
 
-        TerminalWriteString("\n");
-    } while (songChoice >= songLibrary->songCount);
+        if (songChoice == 0 || songChoice > songLibrary->songCount) {
+            TerminalWriteString("Error... Song number is out of range.\n");
+            continue;
+        }
 
-    for (uint32_t i = 0; i < songLibrary->songs[songChoice].length; i++) {
-        struct Note currentNote = songLibrary->songs[songChoice].notes[i];
+        songIndex = songChoice - 1;
+        TerminalWriteString("\n");
+    } while (songChoice == 0 || songChoice > songLibrary->songCount);
+
+    for (uint32_t i = 0; i < songLibrary->songs[songIndex].length; i++) {
+        struct Note currentNote = songLibrary->songs[songIndex].notes[i];
 
         if (currentNote.frequency == R) {
             PianoStopSound();

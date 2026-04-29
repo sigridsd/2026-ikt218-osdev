@@ -179,7 +179,7 @@ int TerminalGetUInt(uint32_t *number) {
         SleepInterrupt(100);
     } while (key != 10 && nextIndex < 10);
 
-    if (error) return 0;
+    if (error || nextIndex == 0) return 0;
 
     *number = num;
     return 1;
