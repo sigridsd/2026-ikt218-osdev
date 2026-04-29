@@ -63,6 +63,11 @@ add_executable(uiaos-kernel
     src/gdt.c
     src/terminal.c
     src/gdt_flush.asm
+	src/idt.c
+	src/irq.c
+	src/isr.c
+	src/keyboard.c
+	src/interrupt.asm
 )
 
 # Include directories for the kernel target
