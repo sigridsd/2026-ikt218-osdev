@@ -2,6 +2,7 @@
 #define IRQ_H
 
 #include "libc/stdint.h"
+extern uint32_t tick;
 
 void irq_init(void);
 void irq_handler(uint8_t irq);
