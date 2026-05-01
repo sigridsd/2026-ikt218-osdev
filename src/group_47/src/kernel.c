@@ -8,6 +8,7 @@
 #include "keyboard.h"
 #include "memory.h"
 #include "pit.h"
+#include "song.h"
 
 extern uint32_t end; // This is defined in arch/i386/linker.ld
 
@@ -48,28 +49,8 @@ void kmain(uint32_t magic, void* mb_info_addr) {
     printf("\n=== OS Ready ===\n");
     printf("Type on your keyboard. Characters will appear below:\n");
     printf("----------------------------------------\n");
-
-    uint32_t counter = 0;
-
-    printf("[");
-    print_int(counter); // Bruk din eksisterende funksjon
-    printf("]: Sleeping with busy-waiting (HIGH CPU).\n");
-        
-    sleep_busy(1000);
-        
-    printf("[");
-    print_int(counter++);
-    printf("]: Slept using busy-waiting.\n");
-
-    printf("[");
-    print_int(counter);
-    printf("]: Sleeping with interrupts (LOW CPU).\n");
-        
-    sleep_interrupt(1000);
-        
-    printf("[");
-    print_int(counter++);
-    printf("]: Slept using interrupts.\n");
+    printf("Playing a song...\n");
+    play_music();
     
     while (1) {
         __asm__ __volatile__("hlt");

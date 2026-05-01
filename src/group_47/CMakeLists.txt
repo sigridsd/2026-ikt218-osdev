@@ -70,6 +70,7 @@ add_executable(uiaos-kernel
 	src/interrupt.asm
 	src/pit.c
 	src/memory.c
+	src/SongPlayer.c
 )
 
 # Include directories for the kernel target
