@@ -58,7 +58,7 @@ isr_common_stub:
     sti
     iretd
 
-; ─── IRQ støtte ────────────────────
+
 
 extern irq_handler
 

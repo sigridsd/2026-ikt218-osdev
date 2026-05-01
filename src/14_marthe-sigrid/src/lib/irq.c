@@ -3,6 +3,7 @@
 #include "io.h"
 #include "libc/stdio.h"
 
+uint32_t tick = 0;
 // Scancode til ASCII lookup table
 // Index = scancode, verdi = ASCII tegn
 static char scancode_table[128] = {
@@ -37,6 +38,8 @@ static void keyboard_handler(void) {
 }
 
 void irq_handler(uint8_t irq) {
+    if (irq == 0)      // IRQ0 = PIT timer
+        tick++;
     if (irq == 1)
         keyboard_handler();
 }
