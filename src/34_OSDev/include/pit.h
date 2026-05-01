@@ -27,6 +27,7 @@
 
 void init_pit();
 void pit_tick();
+uint32_t get_tick_count();
 void sleep_interrupt(uint32_t milliseconds);
 void sleep_busy(uint32_t milliseconds);
 
