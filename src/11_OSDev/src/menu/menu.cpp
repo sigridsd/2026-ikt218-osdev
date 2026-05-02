@@ -236,19 +236,30 @@ static void demo_music(SongPlayer *player)
     Song songs[] = { {music_1, music_1_count} };
     uint32_t n_songs = sizeof(songs) / sizeof(Song);
 
+    /* Drain non-q keys; return 1 if 'q' is found (consumed). */
+    auto check_quit = [](void) -> int {
+        while (1) {
+            char k = kb_peek();
+            if (k == 0) return 0;
+            kb_consume();
+            if (k == 'q' || k == 'Q') return 1;
+        }
+    };
+
     kb_flush();
-    while (kb_peek() != 'q' && kb_peek() != 'Q') {
+    while (1) {
+        if (check_quit()) return;
+
         for (uint32_t i = 0; i < n_songs; i++) {
             terminal_setcolor(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
             printf("  >> Playing song %u...\n", i + 1);
             terminal_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
             player->play_song(&songs[i]);
+            if (check_quit()) return;       /* play_song left q in buffer */
             terminal_setcolor(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
             printf("  >> Finished.\n\n");
-            if (kb_peek() == 'q' || kb_peek() == 'Q') break;
         }
     }
-    kb_consume();
 }
 
 /* 
