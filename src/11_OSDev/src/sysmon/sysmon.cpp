@@ -209,13 +209,18 @@ extern "C" void sysmon_run(void)
         draw_screen(get_current_tick());
 
         /* Check for 'q' every 100 ms so the exit feels instant.
-           Ten 100 ms slices add up to the one-second refresh period. */
+           Ten 100 ms slices add up to the one-second refresh period.
+           We drain the entire keyboard buffer each slice so that 'q'
+           is always seen, even if other keys were pressed first. */
         for (uint32_t slice = 0; slice < 10; slice++) {
             sleep_interrupt(100);
-            char k = kb_peek();
-            if (k == 'q' || k == 'Q') {
-                kb_consume();
-                return;
+            while (1) {
+                char k = kb_peek();
+                if (k == 0) break;        /* buffer empty */
+                kb_consume();              /* remove key */
+                if (k == 'q' || k == 'Q') {
+                    return;
+                }
             }
         }
     }

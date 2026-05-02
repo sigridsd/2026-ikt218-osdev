@@ -41,13 +41,25 @@ static void stop_sound(void)
     outb(PC_SPEAKER_PORT, tmp & (uint8_t)~0x02); /* clear speaker data bit */
 }
 
+/* Drain non-q keys from the buffer.
+   Returns 1 if 'q' was found (left in the buffer for the caller),
+   0 otherwise. */
+static int seen_quit_key(void)
+{
+    while (1) {
+        char k = kb_peek();
+        if (k == 0) return 0;                      /* buffer empty */
+        if (k == 'q' || k == 'Q') return 1;        /* leave q in buffer */
+        kb_consume();                               /* discard other key */
+    }
+}
+
 extern "C" void play_song_impl(Song *song)
 {
     enable_speaker();
 
     for (uint32_t i = 0; i < song->note_count; i++) {
-        char k = kb_peek();
-        if (k == 'q' || k == 'Q') { kb_consume(); break; }
+        if (seen_quit_key()) { stop_sound(); disable_speaker(); return; }
 
         Note *note = &song->notes[i];
         printf("  note %u: %u Hz, %u ms\n", i, note->frequency, note->duration);
@@ -57,7 +69,16 @@ extern "C" void play_song_impl(Song *song)
         else
             play_sound(note->frequency);
 
-        sleep_busy(note->duration);
+        /* Sleep in 50 ms slices so 'q' is detected almost immediately
+           rather than waiting for the entire note to end. */
+        const uint32_t SLICE_MS = 50;
+        uint32_t remaining = note->duration;
+        while (remaining > 0) {
+            uint32_t chunk = remaining > SLICE_MS ? SLICE_MS : remaining;
+            sleep_busy(chunk);
+            remaining -= chunk;
+            if (seen_quit_key()) { stop_sound(); disable_speaker(); return; }
+        }
         stop_sound();
     }
 
