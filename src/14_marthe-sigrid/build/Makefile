@@ -307,6 +307,30 @@ src/libc/stdio.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/libc/stdio.c.s
 .PHONY : src/libc/stdio.c.s
 
+src/main.o: src/main.c.o
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/main.c.o
+.PHONY : src/main.c.o
+
+src/main.i: src/main.c.i
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/main.c.i
+.PHONY : src/main.c.i
+
+src/main.s: src/main.c.s
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/main.c.s
+.PHONY : src/main.c.s
+
 src/memory/malloc.o: src/memory/malloc.c.o
 .PHONY : src/memory/malloc.o
 
@@ -411,6 +435,30 @@ src/pit.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/pit.c.s
 .PHONY : src/pit.c.s
 
+src/songplayer.o: src/songplayer.cpp.o
+.PHONY : src/songplayer.o
+
+# target to build an object file
+src/songplayer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/songplayer.cpp.o
+.PHONY : src/songplayer.cpp.o
+
+src/songplayer.i: src/songplayer.cpp.i
+.PHONY : src/songplayer.i
+
+# target to preprocess a source file
+src/songplayer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/songplayer.cpp.i
+.PHONY : src/songplayer.cpp.i
+
+src/songplayer.s: src/songplayer.cpp.s
+.PHONY : src/songplayer.s
+
+# target to generate assembly for a file
+src/songplayer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/uiaos-kernel.dir/build.make CMakeFiles/uiaos-kernel.dir/src/songplayer.cpp.s
+.PHONY : src/songplayer.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -441,6 +489,9 @@ help:
 	@echo "... src/libc/stdio.o"
 	@echo "... src/libc/stdio.i"
 	@echo "... src/libc/stdio.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
 	@echo "... src/memory/malloc.o"
 	@echo "... src/memory/malloc.i"
 	@echo "... src/memory/malloc.s"
@@ -454,6 +505,9 @@ help:
 	@echo "... src/pit.o"
 	@echo "... src/pit.i"
 	@echo "... src/pit.s"
+	@echo "... src/songplayer.o"
+	@echo "... src/songplayer.i"
+	@echo "... src/songplayer.s"
 .PHONY : help
 
 

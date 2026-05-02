@@ -4,7 +4,7 @@ DISK_PATH=$2
 
 # Start QEMU in the background
 echo "Starting QEMU"
-qemu-system-i386 -S -gdb tcp::1234 -cdrom /workspaces/2026-ikt218-osdev/build/14_marthe-sigrid/kernel.iso -m 64  -serial pty &
+qemu-system-i386 -S -gdb tcp::1234 -cdrom /workspaces/2026-ikt218-osdev/build/14_marthe-sigrid/kernel.iso -m 64 -serial pty -machine pcspk-audiodev=snd -audiodev pa,id=snd &
 QEMU_PID=$!
 
 # Function to check if gdb is running

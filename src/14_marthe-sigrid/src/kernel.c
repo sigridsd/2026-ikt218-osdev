@@ -8,6 +8,8 @@
 #include "kernel/pit.h"
 extern uint32_t end;
 
+void play_music();
+
 void main(uint32_t magic, uint32_t mb_info_addr)
 {
     gdt_init();
@@ -24,6 +26,8 @@ void main(uint32_t magic, uint32_t mb_info_addr)
     void* some_memory = malloc(12345);
     void* memory2 = malloc(54321);
     void* memory3 = malloc(13331);
+
+play_music();
 
 int counter = 0;
 while(true){
