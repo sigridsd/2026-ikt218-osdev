@@ -13,5 +13,7 @@ iso
 build.ninja
 .ninja*
 
+src/14_marthe-sigrid/build/
+
 00_per_arne
 src/group_name/src/kernel.c

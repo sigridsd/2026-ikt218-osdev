@@ -73,6 +73,7 @@ add_executable(uiaos-kernel
 	src/pit.c  
 	src/songplayer.cpp
 	src/main.c
+	src/snake.c
 
 )
 

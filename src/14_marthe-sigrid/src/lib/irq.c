@@ -16,13 +16,23 @@ static char scancode_table[128] = {
 
 static char keyboard_buffer[256];
 static int buffer_index = 0;
+static uint8_t last_scancode = 0;
 
+uint8_t get_last_scancode(void) {  
+    uint8_t sc = last_scancode;
+    last_scancode = 0;
+    return sc;
+}
+
+int suppress_keyboard_print = 0;
 static void keyboard_handler(void) {
     uint8_t scancode = inb(0x60);  // les scancode fra keyboard port
 
     // ignorer key release events (bit 7 satt)
     if (scancode & 0x80)
         return;
+
+    last_scancode = scancode;
 
     char c = scancode_table[scancode];
     if (c == 0)
@@ -33,8 +43,10 @@ static void keyboard_handler(void) {
     buffer_index++;
 
     // print tegnet til skjermen
+    if (!suppress_keyboard_print) {
     char str[2] = {c, '\0'};
     printf(str);
+}
 }
 
 void irq_handler(uint8_t irq) {

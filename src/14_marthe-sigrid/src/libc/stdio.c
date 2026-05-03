@@ -31,6 +31,10 @@ static void terminal_scroll(void) {
     }
     terminal_row = VGA_HEIGHT - 1;
 }
+void printf_color(const char* str, uint8_t color) {
+    for (int i = 0; str[i]; i++)
+        terminal_putchar(str[i], color);
+}
 
 // Skriver ett tegn til skjermen
 void terminal_putchar(char c, uint8_t color) {
