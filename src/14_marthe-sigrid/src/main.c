@@ -7,6 +7,7 @@
 #include "kernel/memory.h"
 #include "kernel/pit.h"
 #include "song/song.h"
+#include "snake.h"
 
 extern uint32_t end;
 void play_song_impl(Song *song);
@@ -19,9 +20,7 @@ SongPlayer* create_song_player() {
 
 void play_music() {
     Song songs[] = {
-        {music_1, sizeof(music_1) / sizeof(Note)},
         {starwars_theme, sizeof(starwars_theme) / sizeof(Note)},
-        {battlefield_1942_theme, sizeof(battlefield_1942_theme) / sizeof(Note)},
     };
     uint32_t n_songs = sizeof(songs) / sizeof(Song);
     SongPlayer* player = create_song_player();
@@ -32,3 +31,4 @@ void play_music() {
         printf("Finished playing the song.\n");
     }
 }
+

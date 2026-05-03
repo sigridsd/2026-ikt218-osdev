@@ -44,7 +44,6 @@ extern "C" void play_song_impl(Song *song) {
 
     for (size_t i = 0; i < song->length; i++) {
         Note note = song->notes[i];
-        printf("Playing note: freq=%d, duration=%d\n", note.frequency, note.duration);
         play_sound(note.frequency);
         sleep_interrupt(note.duration);
         stop_sound();
