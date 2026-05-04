@@ -1,5 +1,5 @@
 /*
- * Snake game for UiAOS
+ * Snake game
  * Game logic (ring-buffer, apple placement, collision) adapted from:
  *   https://github.com/serene-dev/snake-c/blob/main/main.c
  * All I/O replaced with bare-metal VGA, PCSPK, and keyboard IRQ.
@@ -105,6 +105,7 @@ static int xdir, ydir;
 static int score;
 static int gameover;
 static int speed_ms;
+static int ate_apple;
 
 //Drawing
 static void draw_border(void) {
@@ -192,7 +193,7 @@ static void snake_update(void) {
         applex = -1;
         score += 10;
         if (speed_ms > 80) speed_ms -= 10;
-        beep(800, 50);
+        ate_apple = 1;
         place_apple();
     } else {
         // Erase tail, advance tail pointer
@@ -221,21 +222,21 @@ static void snake_update(void) {
     }
 }
 
-// Game over 
+// Game over
 static void show_game_over(void) {
-    beep(300, 100); beep(200, 100); beep(100, 200);
-
     int cx = BOARD_OFF_X + COLS / 2 - 5;
     int cy = BOARD_OFF_Y + ROWS / 2;
     vga_print(cx, cy,     "GAME OVER!", COLOR_RED);
     vga_print(cx, cy + 1, "Score: ",    COLOR_WHITE);
     vga_print_int(cx + 7, cy + 1, score, COLOR_YELLOW);
     vga_print(cx - 5, cy + 2, "ENTER=Restart  ESC=Quit", COLOR_WHITE);
+
+    beep(300, 100); beep(200, 100); beep(100, 200);
 }
 
 //Main game loop (called from main.c)
 void snake_game(void) {
-      suppress_keyboard_print = 1;  // skru av printing
+      suppress_keyboard_print = 1;  // disable keyboard echo while in the game
     int running = 1;
 
     while (running) {
@@ -255,6 +256,7 @@ void snake_game(void) {
             if (sc == KEY_D && xdir != -1) { xdir = 1;  ydir = 0;  }
             if (sc == KEY_ESC) { gameover = 1; running = 0; }
 
+            ate_apple = 0;
             snake_update();
 
             if (!gameover) {
@@ -264,7 +266,14 @@ void snake_game(void) {
                 draw_snake();
             }
 
-            sleep_busy(speed_ms);
+            if (ate_apple) {
+                sound_play(800);
+                sleep_busy(50);
+                sound_stop();
+                sleep_busy(speed_ms > 50 ? speed_ms - 50 : 0);
+            } else {
+                sleep_busy(speed_ms);
+            }
         }
 
         if (running) {

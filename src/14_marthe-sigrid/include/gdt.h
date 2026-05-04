@@ -3,20 +3,20 @@
 
 #include "libc/stdint.h"
 
-// En entry i Global Descriptor Table (8 bytes)
+// One entry in the Global Descriptor Table (8 bytes)
 typedef struct {
-    uint16_t limit_low;       // Nedre 16 bits av segmentstørrelsen
-    uint16_t base_low;        // Nedre 16 bits av startadressen
-    uint8_t  base_middle;     // Midterste 8 bits av startadressen
-    uint8_t  access;          // Tilgangsrettigheter og privilegenivå
-    uint8_t  limit_and_flags; // Øvre 4 bits: flags, nedre 4 bits: limit
-    uint8_t  base_high;       // Øverste 8 bits av startadressen
+    uint16_t limit_low;       // Lower 16 bits of the segment size
+    uint16_t base_low;        // Lower 16 bits of the base address
+    uint8_t  base_middle;     // Middle 8 bits of the base address
+    uint8_t  access;          // Access rights and privilege level
+    uint8_t  limit_and_flags; // Upper 4 bits: flags, lower 4 bits: limit
+    uint8_t  base_high;       // Top 8 bits of the base address
 } __attribute__((packed)) gdt_entry_t;
 
-// GDT-peker som lastes med lgdt-instruksjonen
+// GDT pointer loaded by the lgdt instruction
 typedef struct {
-    uint16_t limit; // Størrelsen på GDT minus 1
-    uint32_t base;  // Minneadresse til starten av GDT
+    uint16_t limit; // Size of the GDT minus 1
+    uint32_t base;  // Memory address of the start of the GDT
 } __attribute__((packed)) gdt_ptr_t;
 
 void gdt_init(void);

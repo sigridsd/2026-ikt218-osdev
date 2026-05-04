@@ -6,7 +6,7 @@ global isr0
 global isr1
 global isr2
 
-; Tom ISR som brukes til å initialisere alle IDT-entries
+; Empty ISR used to initialize every IDT entry
 dummy_isr:
     iretd
 
@@ -31,7 +31,7 @@ isr2:
     push dword 2
     jmp isr_common_stub
 
-; Felles stub for alle ISR-er
+; Common stub shared by all ISRs
 isr_common_stub:
     pusha
     mov ax, ds
@@ -65,10 +65,10 @@ extern irq_handler
 %macro irq_stub 1
 irq_stub_%+%1:
     cli
-    push dword %1       ; send IRQ nummer til irq_handler
+    push dword %1       ; pass IRQ number to irq_handler
     call irq_handler
     add esp, 4
-    mov al, 0x20
+    mov al, 0x20        ; EOI to master PIC
     out 0x20, al
     iretd
 %endmacro

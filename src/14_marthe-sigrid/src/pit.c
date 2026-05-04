@@ -2,7 +2,7 @@
 #include "io.h"
 #include "libc/stdio.h"
 
-extern uint32_t tick;  // delt med irq.c
+extern uint32_t tick;  // shared with irq.c (incremented in IRQ0 handler)
 
 uint32_t get_current_tick() {
     return tick;
@@ -24,9 +24,9 @@ void sleep_busy(uint32_t milliseconds) {
     uint32_t elapsed_ticks = 0;
 
     while (elapsed_ticks < ticks_to_wait) {
-        asm volatile("sti");  // sørg for at interrupts er på
+        asm volatile("sti");  // make sure interrupts are enabled
         while (get_current_tick() == start_tick + elapsed_ticks) {
-            // busy wait
+            // busy wait until the next PIT tick
         }
         elapsed_ticks++;
     }

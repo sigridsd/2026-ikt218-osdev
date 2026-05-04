@@ -64,7 +64,7 @@ add_executable(uiaos-kernel
     src/lib/idt.c
     src/lib/isr.asm
 	src/lib/isr.c
-	src/libc/stdio.c
+	src/stdio.c
 	src/lib/gdt.c
 	src/lib/irq.c 
 	src/memory/malloc.c    

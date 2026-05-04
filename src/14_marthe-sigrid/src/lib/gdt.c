@@ -7,26 +7,26 @@ static gdt_ptr_t gdt_ptr;
 
 static void gdt_set_entry(int index, uint32_t base, uint32_t limit,
                           uint8_t access, uint8_t flags) {
-    // Lagre de nedre 16 bitene av limit og base
+    // Store the lower 16 bits of limit and base
     gdt[index].limit_low = limit & 0xFFFF;
     gdt[index].base_low = base & 0xFFFF;
-    // Midterste byte av base
+    // Middle byte of base
     gdt[index].base_middle = (base >> 16) & 0xFF;
     gdt[index].access = access;
-    // Øvre 4 bits er flags, nedre 4 bits er øvre del av limit
+    // Upper 4 bits are flags, lower 4 bits are the high part of limit
     gdt[index].limit_and_flags = (flags << 4) | ((limit >> 16) & 0x0F);
-    // Øverste byte av base
+    // Top byte of base
     gdt[index].base_high = (base >> 24) & 0xFF;
 }
 
 void gdt_init(void) {
-    // Entry 0: alltid null
+    // Entry 0: always null
     gdt_set_entry(0, 0, 0, 0, 0);
-    // Entry 1: kodesegment, dekker hele minnet (0 til 4GB)
+    // Entry 1: code segment, covers all memory (0 to 4GB)
     // access 0x9A = present, ring 0, code, readable
     // flags 0xC = 32-bit, page granularity
     gdt_set_entry(1, 0, 0xFFFFF, 0x9A, 0xC);
-    // Entry 2: datasegment, dekker hele minnet
+    // Entry 2: data segment, covers all memory
     // access 0x92 = present, ring 0, data, writable
     gdt_set_entry(2, 0, 0xFFFFF, 0x92, 0xC);
 

@@ -5,18 +5,18 @@
 static idt_entry_t idt[IDT_ENTRIES];
 static idt_ptr_t idt_ptr;
 
-// Fyller inn en IDT-entry med handler-adresse, segment og type
+// Fill in an IDT entry with handler address, segment and type
 void idt_set_entry(uint8_t index, uint32_t handler, uint16_t selector,
                    uint8_t type_attr) {
-    // Nedre 16 bits av handler-adressen
+    // Lower 16 bits of the handler address
     idt[index].offset_low = handler & 0xFFFF;
-    // Øvre 16 bits av handler-adressen
+    // Upper 16 bits of the handler address
     idt[index].offset_high = (handler >> 16) & 0xFFFF;
-    // Kodesegment i GDT (0x08 = entry 1)
+    // Code segment in the GDT (0x08 = entry 1)
     idt[index].selector = selector;
-    // Alltid 0
+    // Always 0
     idt[index].zero = 0;
-    // Gate type og privilegenivå
+    // Gate type and privilege level
     idt[index].type_attr = type_attr;
 }
 
@@ -26,11 +26,11 @@ void idt_init(void) {
     idt_ptr.limit = sizeof(idt) - 1;
     idt_ptr.base = (uint32_t)&idt;
 
-    // Fyll alle 256 entries med en tom ISR som bare returnerer
+    // Fill all 256 entries with an empty ISR that just returns
     for (int i = 0; i < IDT_ENTRIES; i++) {
         idt_set_entry(i, (uint32_t)dummy_isr, 0x08, 0x8E);
     }
 
-    // Last IDT inn i CPU via lidt-instruksjonen
+    // Load the IDT into the CPU via the lidt instruction
     idt_flush((uint32_t)&idt_ptr);
 }

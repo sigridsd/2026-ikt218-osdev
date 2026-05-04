@@ -4,8 +4,8 @@
 #include "libc/stdio.h"
 
 uint32_t tick = 0;
-// Scancode til ASCII lookup table
-// Index = scancode, verdi = ASCII tegn
+// Scancode-to-ASCII lookup table.
+// Index = scancode, value = ASCII character
 static char scancode_table[128] = {
     0,    0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',  '=',  '\b',
     '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -26,9 +26,9 @@ uint8_t get_last_scancode(void) {
 
 int suppress_keyboard_print = 0;
 static void keyboard_handler(void) {
-    uint8_t scancode = inb(0x60);  // les scancode fra keyboard port
+    uint8_t scancode = inb(0x60);  // read scancode from the keyboard port
 
-    // ignorer key release events (bit 7 satt)
+    // ignore key release events (bit 7 set)
     if (scancode & 0x80)
         return;
 
@@ -38,11 +38,11 @@ static void keyboard_handler(void) {
     if (c == 0)
         return;
 
-    // lagre i buffer
+    // store in the buffer
     keyboard_buffer[buffer_index % 256] = c;
     buffer_index++;
 
-    // print tegnet til skjermen
+    // echo the character to the screen unless suppressed (e.g. inside snake/music)
     if (!suppress_keyboard_print) {
     char str[2] = {c, '\0'};
     printf(str);
@@ -52,7 +52,7 @@ static void keyboard_handler(void) {
 void irq_handler(uint8_t irq) {
     if (irq == 0)      // IRQ0 = PIT timer
         tick++;
-    if (irq == 1)
+    if (irq == 1)      // IRQ1 = keyboard
         keyboard_handler();
 }
 void irq_init(void) {

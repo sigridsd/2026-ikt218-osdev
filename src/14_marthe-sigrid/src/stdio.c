@@ -3,20 +3,20 @@
 #include "../include/libc/stddef.h"
 #include "../include/libc/stdint.h"
 
-// VGA-skjermen er 80 tegn bred og 25 linjer høy
+// The VGA text-mode screen is 80 columns wide and 25 rows tall
 #define VGA_WIDTH  80
 #define VGA_HEIGHT 25
-// VGA-minnet starter på denne adressen
+// VGA text-mode memory starts at this physical address
 #define VGA_MEMORY 0xB8000
 
-// Peker til VGA-minnebufferet
+// Pointer to the VGA memory buffer
 static uint16_t *terminal_buffer = (uint16_t *)VGA_MEMORY;
 static int terminal_row = 0;
 static int terminal_col = 0;
-// Farge: lys grå tekst på svart bakgrunn
+// Color: light gray text on black background
 static uint8_t terminal_color = 0x07;
 
-// Scroller skjermen opp én linje
+// Scroll the screen up one line
 static void terminal_scroll(void) {
     for (int row = 1; row < VGA_HEIGHT; row++) {
         for (int col = 0; col < VGA_WIDTH; col++) {
@@ -24,7 +24,7 @@ static void terminal_scroll(void) {
                 terminal_buffer[row * VGA_WIDTH + col];
         }
     }
-    // Tøm siste linje
+    // Clear the last line
     for (int col = 0; col < VGA_WIDTH; col++) {
         terminal_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + col] =
             (terminal_color << 8) | ' ';
@@ -43,7 +43,7 @@ void terminal_clear(void) {
     terminal_col = 0;
 }
 
-// Skriver ett tegn til skjermen
+// Write a single character to the screen at the current cursor position
 void terminal_putchar(char c, uint8_t color) {
     if (c == '\n') {
         terminal_col = 0;
@@ -62,14 +62,14 @@ void terminal_putchar(char c, uint8_t color) {
     }
 }
 
-// Skriver en streng til skjermen
+// Write a null-terminated string to the screen
 static void terminal_write(const char *str) {
     for (int i = 0; str[i] != '\0'; i++) {
         terminal_putchar(str[i], terminal_color);
     }
 }
 
-// Skriver et heltall til skjermen
+// Write a signed integer to the screen in base 10
 static void print_int(int value) {
     if (value < 0) {
         terminal_putchar('-', terminal_color);
@@ -90,7 +90,7 @@ static void print_int(int value) {
     }
 }
 
-// Skriver et heksadesimalt tall til skjermen
+// Write an unsigned integer to the screen as a hexadecimal value (0x...)
 static void print_hex(uint32_t value) {
     char hex_chars[] = "0123456789ABCDEF";
     terminal_write("0x");
@@ -109,7 +109,8 @@ static void print_hex(uint32_t value) {
     }
 }
 
-// Intern printf-funksjon med fargestøtte
+// Internal printf implementation with color support.
+// Supports %s, %d, %x, %c and %%.
 static void vprintf_color(const char *format, va_list args, uint8_t color) {
     for (int i = 0; format[i] != '\0'; i++) {
         if (format[i] == '%' && format[i + 1] != '\0') {
@@ -127,7 +128,7 @@ static void vprintf_color(const char *format, va_list args, uint8_t color) {
     }
 }
 
-// Hovedfunksjonen for å skrive formatert tekst til skjermen
+// Main entry point for writing formatted text to the screen
 int printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
