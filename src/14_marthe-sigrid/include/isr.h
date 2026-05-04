@@ -3,20 +3,21 @@
 
 #include "libc/stdint.h"
 
-// Snapshot of all registers when an interrupt fires.
-// The order must match exactly what isr_common_stub pushes onto the stack.
+// snapshot of the CPU at the moment of an interrupt.
+// the field order has to mirror what exception_dispatch pushes on the
+// stack, otherwise everything will read out scrambled.
 typedef struct {
-    uint32_t ds;                                    // Data segment
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pusha
-    uint32_t int_no, err_code;                      // Interrupt number and error code
-    uint32_t eip, cs, eflags, useresp, ss;          // Pushed automatically by the CPU
+    uint32_t ds;                                     // saved data segment
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // pushed by `pusha`
+    uint32_t int_no, err_code;                       // we push these in the asm stubs
+    uint32_t eip, cs, eflags, useresp, ss;           // the CPU pushes these for us
 } registers_t;
 
 void isr_init(void);
 void isr_handler(registers_t *regs);
 
-extern void isr0(void); // Division By Zero
-extern void isr1(void); // Debug
-extern void isr2(void); // Non-Maskable Interrupt
+extern void isr_divzero(void); // #DE  divide error
+extern void isr_debug(void);   // #DB  debug
+extern void isr_nmi(void);     //      non-maskable interrupt
 
 #endif

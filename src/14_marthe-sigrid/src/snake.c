@@ -1,8 +1,9 @@
 /*
- * Snake game
- * Game logic (ring-buffer, apple placement, collision) adapted from:
- *   https://github.com/serene-dev/snake-c/blob/main/main.c
- * All I/O replaced with bare-metal VGA, PCSPK, and keyboard IRQ.
+ * Snake!
+ * The game logic (ring buffer for the body, apple placement, collision
+ * checks) is borrowed from https://github.com/serene-dev/snake-c.
+ * We just rip out all the libc I/O and talk to the VGA buffer, PC
+ * speaker, and keyboard IRQ directly since we're running on bare metal.
  */
 
 #include "../include/snake.h"
@@ -10,7 +11,7 @@
 #include "../include/kernel/pit.h"
 #include "../include/io.h"
 
-// VGA
+// VGA text mode lives at 0xB8000, 80x25 grid of (char, attr) pairs
 #define VGA_WIDTH  80
 #define VGA_HEIGHT 25
 static uint16_t *vga = (uint16_t *)0xB8000;
@@ -35,9 +36,9 @@ static void vga_print_int(int x, int y, int val, uint8_t color) {
     int i = 0;
     if (val == 0) { buf[i++] = '0'; buf[i] = '\0'; }
     else {
+        // pull digits out from the back, then flip the buffer
         while (val > 0) { buf[i++] = '0' + (val % 10); val /= 10; }
         buf[i] = '\0';
-        // reverse
         for (int a = 0, b = i - 1; a < b; a++, b--) {
             char t = buf[a]; buf[a] = buf[b]; buf[b] = t;
         }
@@ -45,7 +46,7 @@ static void vga_print_int(int x, int y, int val, uint8_t color) {
     vga_print(x, y, buf, color);
 }
 
-//PCSPK 
+// PC speaker stuff for apple-eat blip and game-over jingle
 static void sound_play(uint32_t freq) {
     uint32_t div = 1193180 / freq;
     outb(0x43, 0xB6);
@@ -64,7 +65,7 @@ static void beep(uint32_t freq, uint32_t ms) {
     sound_stop();
 }
 
-//Keyboard
+// keyboard scancodes for the keys we care about (PS/2 set 1)
 #define KEY_W  0x11
 #define KEY_S  0x1F
 #define KEY_A  0x1E
@@ -79,7 +80,8 @@ extern int suppress_keyboard_print;
 static uint8_t read_scancode(void) {
     return get_last_scancode();
 }
-//RNG (seeded by PIT tick)
+
+// dead simple LCG. seeded with the PIT tick so it's a bit different each run
 extern uint32_t tick;
 static uint32_t rng_state = 12345;
 
@@ -89,17 +91,16 @@ static uint32_t rng_next(void) {
     return rng_state;
 }
 
-// Ring-buffer (adapted from serene-dev/snake-c)
-// Original used: int x[1000], y[1000]; int head=0, tail=0;
-// We keep the same structure, mapped to board coordinates.
+// Snake body lives in a ring buffer (head grows, tail shrinks each step).
+// Same structure as the original snake-c, just renamed to fit our coords.
 #define SNAKE_BUF 1000
-static int sx[SNAKE_BUF], sy[SNAKE_BUF];  // ring-buffer for snake body
+static int sx[SNAKE_BUF], sy[SNAKE_BUF];
 static int head, tail;
 
-// Apple (original called it applex/appley)
+// where the apple is right now (-1 in applex means none placed yet)
 static int applex, appley;
 
-// Direction (original used xdir/ydir)
+// movement direction in cells per step
 static int xdir, ydir;
 
 static int score;
@@ -107,15 +108,15 @@ static int gameover;
 static int speed_ms;
 static int ate_apple;
 
-//Drawing
+// draw the wall of '#' around the play field
 static void draw_border(void) {
     uint8_t col = COLOR_CYAN;
-    // top/bottom
+    // top + bottom rows
     for (int x = 0; x <= COLS + 1; x++) {
         vga_put(BOARD_OFF_X + x, BOARD_OFF_Y,          '#', col);
         vga_put(BOARD_OFF_X + x, BOARD_OFF_Y + ROWS + 1, '#', col);
     }
-    // sides
+    // left + right sides
     for (int y = 0; y <= ROWS + 1; y++) {
         vga_put(BOARD_OFF_X,          BOARD_OFF_Y + y, '#', col);
         vga_put(BOARD_OFF_X + COLS + 1, BOARD_OFF_Y + y, '#', col);
@@ -128,8 +129,8 @@ static void draw_hud(void) {
     vga_print(25, 0, "ESC=Quit  WASD=Move", COLOR_WHITE);
 }
 
+// translates from board coords (0..COLS-1, 0..ROWS-1) to actual VGA cells
 static void draw_cell(int x, int y, char c, uint8_t color) {
-    // x,y are board coords (0..COLS-1, 0..ROWS-1)
     vga_put(BOARD_OFF_X + 1 + x, BOARD_OFF_Y + 1 + y, c, color);
 }
 
@@ -139,9 +140,8 @@ static void draw_apple(void) {
 }
 
 static void draw_snake(void) {
-    // Draw head
+    // head is white '@', the rest of the body is green 'o'
     draw_cell(sx[head], sy[head], '@', COLOR_WHITE);
-    // Draw body
     for (int i = tail; i != head; i = (i + 1) % SNAKE_BUF)
         draw_cell(sx[i], sy[i], 'o', COLOR_GREEN);
 }
@@ -150,9 +150,9 @@ static void erase_cell(int x, int y) {
     draw_cell(x, y, ' ', COLOR_BLACK);
 }
 
-//Game logic (adapted from serene-dev/snake-c)
+// keep rolling random spots until we land on one that isn't on the snake.
+// the attempt cap is just a safety net so we never spin forever.
 static void place_apple(void) {
-    // Original: applex = rand() % COLS; + collision check loop
     applex = -1;
     int attempts = 0;
     while (applex < 0 && attempts++ < 2000) {
@@ -166,14 +166,14 @@ static void place_apple(void) {
     }
 }
 
+// reset everything for a fresh round: snake in the middle, moving right
 static void snake_init(void) {
-    // Original: head=0; tail=0; x[head]=COLS/2; y[head]=ROWS/2;
     head = 0;
     tail = 0;
     sx[head] = COLS / 2;
     sy[head] = ROWS / 2;
 
-    xdir = 1; ydir = 0;   // original default: move right
+    xdir = 1; ydir = 0;
     applex = -1;
     score = 0;
     gameover = 0;
@@ -183,37 +183,37 @@ static void snake_init(void) {
     place_apple();
 }
 
+// one game tick: handle apple, move the head, check for crashes
 static void snake_update(void) {
-    // Original: clear tail cell, check apple, advance head
     int old_tail_x = sx[tail];
     int old_tail_y = sy[tail];
 
     if (sx[head] == applex && sy[head] == appley) {
-        // Ate apple – don't advance tail (snake grows)
+        // got the apple, snake grows so we skip moving the tail
         applex = -1;
         score += 10;
-        if (speed_ms > 80) speed_ms -= 10;
+        if (speed_ms > 80) speed_ms -= 10;  // speed up a little each apple
         ate_apple = 1;
         place_apple();
     } else {
-        // Erase tail, advance tail pointer
+        // normal move: wipe old tail and shift the tail pointer
         erase_cell(old_tail_x, old_tail_y);
         tail = (tail + 1) % SNAKE_BUF;
     }
 
-    // Advance head (original: x[newhead] = (x[head] + xdir + COLS) % COLS)
+    // push the head one cell forward
     int newhead = (head + 1) % SNAKE_BUF;
     sx[newhead] = sx[head] + xdir;
     sy[newhead] = sy[head] + ydir;
     head = newhead;
 
-    // Wall collision (original wrapped around; we end game instead)
+    // ran into a wall? (the original snake-c wrapped, we don't)
     if (sx[head] < 0 || sx[head] >= COLS || sy[head] < 0 || sy[head] >= ROWS) {
         gameover = 1;
         return;
     }
 
-    // Self collision (original loop)
+    // ran into ourselves?
     for (int i = tail; i != head; i = (i + 1) % SNAKE_BUF) {
         if (sx[i] == sx[head] && sy[i] == sy[head]) {
             gameover = 1;
@@ -222,7 +222,7 @@ static void snake_update(void) {
     }
 }
 
-// Game over
+// game-over splash + a sad descending jingle
 static void show_game_over(void) {
     int cx = BOARD_OFF_X + COLS / 2 - 5;
     int cy = BOARD_OFF_Y + ROWS / 2;
@@ -234,9 +234,9 @@ static void show_game_over(void) {
     beep(300, 100); beep(200, 100); beep(100, 200);
 }
 
-//Main game loop (called from main.c)
+// entry point from kernel.c. runs until the player ESC's out.
 void snake_game(void) {
-      suppress_keyboard_print = 1;  // disable keyboard echo while in the game
+      suppress_keyboard_print = 1;  // don't let the IRQ echo keys to the screen mid-game
     int running = 1;
 
     while (running) {
@@ -248,7 +248,7 @@ void snake_game(void) {
         draw_snake();
 
         while (!gameover) {
-            // Input
+            // input: WASD turns, ESC quits. extra check to stop instant 180s.
             uint8_t sc = read_scancode();
             if (sc == KEY_W    && ydir != 1)  { xdir = 0;  ydir = -1; }
             if (sc == KEY_S  && ydir != -1) { xdir = 0;  ydir = 1;  }
@@ -267,6 +267,8 @@ void snake_game(void) {
             }
 
             if (ate_apple) {
+                // little blip when we eat an apple. don't double up on the
+                // wait, so subtract the blip time from the normal step delay.
                 sound_play(800);
                 sleep_busy(50);
                 sound_stop();

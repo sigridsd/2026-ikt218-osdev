@@ -12,7 +12,6 @@
 extern uint32_t end;
 void play_song_impl(Song *song);
 
-// Allocate a SongPlayer on the heap and wire it to the PC-speaker backend
 SongPlayer* create_song_player() {
     SongPlayer* player = (SongPlayer*)malloc(sizeof(SongPlayer));
     player->play_song = play_song_impl;
@@ -21,10 +20,8 @@ SongPlayer* create_song_player() {
 
 extern int suppress_keyboard_print;
 
-// Menu entry point for the music option.
-// Plays the songs back-to-back through the PC speaker.
-// Keyboard echo is disabled so typed characters don't garble the screen
-// while the songs are playing.
+// blasts the songs through the PC speaker.
+// turn off keyboard echo so typing doesn't show up while it plays
 void play_music() {
     suppress_keyboard_print = 1;
     Song songs[] = {

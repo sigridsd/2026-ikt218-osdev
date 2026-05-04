@@ -3,20 +3,21 @@
 
 #include "libc/stdint.h"
 
-// One entry in the Global Descriptor Table (8 bytes)
+// one slot in the GDT (8 bytes). layout dictated by the CPU,
+// base + limit are sliced into multiple fields, hence the awkward names.
 typedef struct {
-    uint16_t limit_low;       // Lower 16 bits of the segment size
-    uint16_t base_low;        // Lower 16 bits of the base address
-    uint8_t  base_middle;     // Middle 8 bits of the base address
-    uint8_t  access;          // Access rights and privilege level
-    uint8_t  limit_and_flags; // Upper 4 bits: flags, lower 4 bits: limit
-    uint8_t  base_high;       // Top 8 bits of the base address
+    uint16_t limit_low;       // low 16 bits of the segment size
+    uint16_t base_low;        // low 16 bits of the base address
+    uint8_t  base_middle;     // middle 8 bits of the base
+    uint8_t  access;          // access byte (ring level, type, present, etc.)
+    uint8_t  limit_and_flags; // top 4 bits = flags, bottom 4 = high nibble of limit
+    uint8_t  base_high;       // top 8 bits of the base
 } __attribute__((packed)) gdt_entry_t;
 
-// GDT pointer loaded by the lgdt instruction
+// what we hand to lgdt: how big the table is and where it lives
 typedef struct {
-    uint16_t limit; // Size of the GDT minus 1
-    uint32_t base;  // Memory address of the start of the GDT
+    uint16_t limit; // size of the table - 1
+    uint32_t base;  // address of the first entry
 } __attribute__((packed)) gdt_ptr_t;
 
 void gdt_init(void);

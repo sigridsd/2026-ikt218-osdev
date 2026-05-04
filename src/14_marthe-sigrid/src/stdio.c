@@ -3,20 +3,20 @@
 #include "../include/libc/stddef.h"
 #include "../include/libc/stdint.h"
 
-// The VGA text-mode screen is 80 columns wide and 25 rows tall
+// VGA text mode is an 80x25 grid of 16-bit cells (char + color)
 #define VGA_WIDTH  80
 #define VGA_HEIGHT 25
-// VGA text-mode memory starts at this physical address
+// the cells live at this fixed physical address
 #define VGA_MEMORY 0xB8000
 
-// Pointer to the VGA memory buffer
 static uint16_t *terminal_buffer = (uint16_t *)VGA_MEMORY;
 static int terminal_row = 0;
 static int terminal_col = 0;
-// Color: light gray text on black background
+// default color attribute: light gray on black
 static uint8_t terminal_color = 0x07;
 
-// Scroll the screen up one line
+// shift everything up one row and blank the bottom row.
+// used when we'd otherwise write past the bottom of the screen.
 static void terminal_scroll(void) {
     for (int row = 1; row < VGA_HEIGHT; row++) {
         for (int col = 0; col < VGA_WIDTH; col++) {
@@ -24,7 +24,7 @@ static void terminal_scroll(void) {
                 terminal_buffer[row * VGA_WIDTH + col];
         }
     }
-    // Clear the last line
+    // wipe the freshly-revealed bottom row
     for (int col = 0; col < VGA_WIDTH; col++) {
         terminal_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH + col] =
             (terminal_color << 8) | ' ';
@@ -43,7 +43,7 @@ void terminal_clear(void) {
     terminal_col = 0;
 }
 
-// Write a single character to the screen at the current cursor position
+// drop one character at the current cursor spot. handles \n and wrapping.
 void terminal_putchar(char c, uint8_t color) {
     if (c == '\n') {
         terminal_col = 0;
@@ -62,14 +62,14 @@ void terminal_putchar(char c, uint8_t color) {
     }
 }
 
-// Write a null-terminated string to the screen
+// loop a string into terminal_putchar, that's it
 static void terminal_write(const char *str) {
     for (int i = 0; str[i] != '\0'; i++) {
         terminal_putchar(str[i], terminal_color);
     }
 }
 
-// Write a signed integer to the screen in base 10
+// print a signed int in base 10. builds digits backwards into buf, prints reversed.
 static void print_int(int value) {
     if (value < 0) {
         terminal_putchar('-', terminal_color);
@@ -90,7 +90,7 @@ static void print_int(int value) {
     }
 }
 
-// Write an unsigned integer to the screen as a hexadecimal value (0x...)
+// same idea but for hex, with a 0x prefix
 static void print_hex(uint32_t value) {
     char hex_chars[] = "0123456789ABCDEF";
     terminal_write("0x");
@@ -109,8 +109,7 @@ static void print_hex(uint32_t value) {
     }
 }
 
-// Internal printf implementation with color support.
-// Supports %s, %d, %x, %c and %%.
+// the actual printf engine. understands %s, %d, %x, %c and literal %%.
 static void vprintf_color(const char *format, va_list args, uint8_t color) {
     for (int i = 0; format[i] != '\0'; i++) {
         if (format[i] == '%' && format[i + 1] != '\0') {
@@ -128,7 +127,7 @@ static void vprintf_color(const char *format, va_list args, uint8_t color) {
     }
 }
 
-// Main entry point for writing formatted text to the screen
+// the printf everyone actually calls. just unpacks varargs and hands off.
 int printf(const char *format, ...) {
     va_list args;
     va_start(args, format);

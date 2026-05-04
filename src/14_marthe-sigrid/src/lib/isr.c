@@ -1,26 +1,30 @@
-#include "../include/isr.h"
 #include "../include/idt.h"
+#include "../include/isr.h"
 #include "../include/libc/stdint.h"
 #include "../include/libc/stdio.h"
 
-// Names of the three exceptions we handle
-static const char *exception_messages[] = {
-    "Division By Zero",       // ISR 0
-    "Debug",                  // ISR 1
-    "Non-Maskable Interrupt"  // ISR 2
-};
-
-// Register ISR handlers in the IDT
-void isr_init(void) {
-    // 0x08 = code segment in the GDT
-    // 0x8E = 32-bit interrupt gate, ring 0, present
-    idt_set_entry(0, (uint32_t)isr0, 0x08, 0x8E);
-    idt_set_entry(1, (uint32_t)isr1, 0x08, 0x8E);
-    idt_set_entry(2, (uint32_t)isr2, 0x08, 0x8E);
+// turn an exception number into a name. we only hook the first three,
+// so anything else falling in here means something weird happened.
+static const char *exception_label(uint32_t vector) {
+    switch (vector) {
+        case 0: return "(Divide Error)";
+        case 1: return "(Debug)";
+        case 2: return "NMI (Non-Maskable Interrupt)";
+    }
+    return "<unknown vector>";
 }
 
-// Called from isr_common_stub in isr.asm with a pointer to the register state
+// hook the three exception stubs into the IDT.
+// 0x08 = kernel code segment in the GDT, 0x8E = 32-bit interrupt gate, ring 0, present.
+void isr_init(void) {
+    void (*const stubs[3])(void) = { isr_divzero, isr_debug, isr_nmi };
+    for (uint8_t vec = 0; vec < 3; vec++) {
+        idt_set_entry(vec, (uint32_t)stubs[vec], 0x08, 0x8E);
+    }
+}
+
+// called from the asm trampoline once it's stashed all the registers into *regs
 void isr_handler(registers_t *regs) {
-    printf("ISR fired: interrupt %d: %s\n", regs->int_no,
-           exception_messages[regs->int_no]);
+    printf("[exception] vector=%d err=0x%x -> %s\n",
+           regs->int_no, regs->err_code, exception_label(regs->int_no));
 }

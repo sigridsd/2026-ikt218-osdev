@@ -3,19 +3,20 @@
 
 #include "libc/stdint.h"
 
-// One entry in the Interrupt Descriptor Table (8 bytes)
+// one slot in the IDT (8 bytes). the handler address is sliced in two
+// because the CPU's gate descriptor format demands it.
 typedef struct {
-    uint16_t offset_low;  // Lower 16 bits of the handler address
-    uint16_t selector;    // Code segment in the GDT (0x08 = entry 1)
-    uint8_t  zero;        // Always 0, reserved
-    uint8_t  type_attr;   // Gate type, DPL and present bit
-    uint16_t offset_high; // Upper 16 bits of the handler address
+    uint16_t offset_low;  // low 16 bits of the handler address
+    uint16_t selector;    // GDT selector to use (0x08 = our kernel code seg)
+    uint8_t  zero;        // reserved, must be 0
+    uint8_t  type_attr;   // gate type + DPL + present bit
+    uint16_t offset_high; // top 16 bits of the handler address
 } __attribute__((packed)) idt_entry_t;
 
-// IDT pointer loaded by the lidt instruction
+// what we hand to lidt: table size and where it lives
 typedef struct {
-    uint16_t limit; // Size of the IDT minus 1
-    uint32_t base;  // Memory address of the start of the IDT
+    uint16_t limit; // size of the table - 1
+    uint32_t base;  // address of the first entry
 } __attribute__((packed)) idt_ptr_t;
 
 void idt_set_entry(uint8_t index, uint32_t handler, uint16_t selector,

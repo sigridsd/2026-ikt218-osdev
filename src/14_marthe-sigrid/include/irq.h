@@ -9,7 +9,7 @@ void irq_init(void);
 void irq_handler(uint8_t irq);
 uint8_t get_last_scancode(void);
 
-extern void* irq_stub_table[];
+extern void* irq_entry_table[];
 
 
 #endif
